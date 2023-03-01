@@ -1,46 +1,33 @@
-from binance.client import Client
-import json
+import asyncio
 import websockets
+import json
 import time
 
-# Fonction pour traiter les données reçues par WebSocket
-def on_message(ws, message):
-    data = json.loads(message)
-    # Vérifier si c'est un message de prix ticker
-    if 'e' in data and data['e'] == 'ticker':
-        symbol = data['s']  # Récupérer le symbole
-        price = float(data['c'])  # Récupérer le prix en float
-        # Ajouter les données à un dictionnaire
-        ticker_data[symbol] = price
-        # Enregistrer les données dans un fichier JSON toutes les 5 secondes
-        if time.time() - last_save_time > 5:
-            with open('ticker_data.json', 'w') as f:
-                json.dump(ticker_data, f)
-            last_save_time = time.time()
+async def subscribe(websocket):
+    # Abonnement au ticker de BTCUSDT
+    await websocket.send('{"method": "SUBSCRIBE", "params": ["btcusdt@ticker"], "id": 1}')
 
-# Fonction pour gérer les erreurs WebSocket
-def on_error(ws, error):
-    print(error)
+async def receive(websocket, data_list):
+    async for message in websocket:
+        data = json.loads(message)
+        print(data)
+        data_list.append(data)
+        break
 
-# Fonction pour gérer la fermeture de la connexion WebSocket
-def on_close(ws):
-    print("WebSocket closed")
+async def main():
+    async with websockets.connect("wss://stream.binance.com:9443/ws") as websocket:
+        await subscribe(websocket)
 
-# Fonction pour ouvrir la connexion WebSocket
-def on_open(ws):
-    # Envoyer une demande d'abonnement pour les prix de tous les tickers
-    ws.send(json.dumps({
-        "method": "SUBSCRIBE",
-        "params": ["!ticker@arr"],
-        "id": 1
-    }))
+        # Mettre en place une boucle d'attente de 10 secondes
+        # et d'arrêt après 1 minute (6 boucles)
+        data_list = []
+        for i in range(6):
+            await receive(websocket, data_list)
+            time.sleep(10)
+
+        # Écrire les données dans un fichier JSON
+        with open("BTCUSDT_data_stream.json", "w") as json_file:
+            json.dump(data_list, json_file)
 
 if __name__ == "__main__":
-    # Initialiser le dictionnaire pour stocker les données ticker
-    ticker_data = {}
-    # Initialiser le temps de dernière sauvegarde
-    last_save_time = time.time()
-    # Ouvrir une connexion WebSocket
-    ws = websockets.WebSocketApp("wss://stream.binance.com:9443/ws", on_message=on_message, on_error=on_error, on_close=on_close)
-    ws.on_open = on_open
-    ws.run_forever()  # démarrer la boucle infinie pour recevoir des données en continu
+    asyncio.run(main())
