@@ -7,8 +7,8 @@ The goal is to build a pipeline to automatically process cryptomoney stock excha
 
 ### configuration API keys 
 
-At the root of the projet at folder name "config" and create a file config.ini inside. 
-The config/config.py file should contain the following info:
+At the root of the projet at folder name "config" and create a file config.ini inside.  
+The config/config.ini file should contain the following info:
 
 ```
 [API]
