@@ -1,5 +1,9 @@
 # OPA credential 
 config/config.py
+config.py
+
+# pycharm 
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
