@@ -1,11 +1,12 @@
 from binance.client import Client
 import json
 import pandas as pd
-from config import config
+import config
 
 
 # Initialise le client Binance
 client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
+client.ping()
 
 # Récupère tout les 'tickers' de l'API
 tickers = client.get_all_tickers()
