@@ -7,10 +7,11 @@ The goal is to build a pipeline to automatically process cryptomoney stock excha
 
 ### configuration API keys 
 
-At the root of the projet at folder name "config" and create a file config.py inside. 
+At the root of the projet at folder name "config" and create a file config.ini inside. 
 The config/config.py file should contain the following info:
 
 ```
+[API]
 BINANCE_API_KEY = 'put your api key here'
 BINANCE_API_SECRET = 'put the api scret here'
 ```
