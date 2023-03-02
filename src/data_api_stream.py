@@ -3,9 +3,11 @@ import websockets
 import json
 import time
 
+
 async def subscribe(websocket):
     # Abonnement au ticker de BTCUSDT
     await websocket.send('{"method": "SUBSCRIBE", "params": ["btcusdt@ticker"], "id": 1}')
+
 
 async def receive(websocket, data_list):
     async for message in websocket:
@@ -13,6 +15,7 @@ async def receive(websocket, data_list):
         print(data)
         data_list.append(data)
         break
+
 
 async def main():
     async with websockets.connect("wss://stream.binance.com:9443/ws") as websocket:
@@ -28,6 +31,7 @@ async def main():
         # Écrire les données dans un fichier JSON
         with open("BTCUSDT_data_stream.json", "w") as json_file:
             json.dump(data_list, json_file)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
