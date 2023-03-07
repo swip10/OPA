@@ -4,3 +4,6 @@ openpyxl
 websocket
 plotly
 tqdm
+scikit-learn
+tensorflow
+keras
