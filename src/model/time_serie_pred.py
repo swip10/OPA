@@ -26,8 +26,8 @@ df = df[["close", "symbol"]]
 # filter on only one currency during dev
 df = df.query("symbol == 'ETHBTC'")
 
+# scaler should be only train on test set
 scaler = MinMaxScaler()
-# fit the format of the scaler -> convert shape from (1000, ) -> (1000, 1)
 close_price = df.close.values.reshape(-1, 1)
 scaled_close = scaler.fit_transform(close_price)
 
