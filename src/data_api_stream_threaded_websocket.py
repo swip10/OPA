@@ -3,7 +3,7 @@ from binance.client import Client
 from datetime import datetime
 from time import sleep
 import config
-import test_sql
+import sql_client
 
 client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
 tickers = config.get_tickers(client)
@@ -30,7 +30,7 @@ def transform_and_append_database(msg):
     data["taker_buy_base_asset_volume"] = kline["V"]
     data["taker_buy_quote_asset_volume"] = kline["Q"]
     print(data)
-    sql_client.add_line_to_database(data, kline["s"], connector, close=True)
+    sql_client.add_line_to_database(data, kline["s"], connector, close_db=True)
 
 
 # example of function to call for opening a steam - todo define one handler for each function

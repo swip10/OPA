@@ -5,7 +5,7 @@ def get_db_client():
     return sqlite3.connect('BDD_hist.sqlite')
 
 
-def add_line_to_database(d, key, conn, close=False):
+def add_line_to_database(d, key, conn, close_db=False):
     symbol = key
     timestamp = d['timestamp']
     open_price = d['open']
@@ -20,12 +20,13 @@ def add_line_to_database(d, key, conn, close=False):
     taker_buy_quote_asset_volume = d['taker_buy_quote_asset_volume']
 
     cursor = conn.cursor()
-    cursor.execute(f"INSERT INTO {key} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    cursor.execute(f"REPLACE INTO {key} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
               (
               symbol, timestamp, open_price, high, low, close, volume, close_time, quote_asset_volume, number_of_trades,
               taker_buy_base_asset_volume, taker_buy_quote_asset_volume))
-    conn.commit()
-    if close:
+
+    if close_db:
+        conn.commit()
         conn.close()
 
 

@@ -20,8 +20,8 @@ for key in keys:
 
     # Insertion des données dans la table
     for d in data[key]:
-        print(key)
-        sql_client.add_line_to_database(d, key, conn, close=False)
+        sql_client.add_line_to_database(d, key, conn, close_db=False)
 
 # Validation des changements et fermeture de la connexion à la base de données
+conn.commit()
 conn.close()
