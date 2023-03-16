@@ -10,11 +10,11 @@ client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
 client.ping()
 
 # Récupère tout les 'tickers' de l'API
-tickers = client.get_symbol_ticker()
+tickers = config.get_tickers(client)
 
 # Initialise un dictionnaire pour stocker les données de chaque ticker
 ticker_data = {}
-loading_tickers = tqdm(tickers[0:2])
+loading_tickers = tqdm(tickers)
 
 # Récupère les données de l'API sur chacun des tickers
 for ticker in loading_tickers:
