@@ -22,6 +22,6 @@ Install the site-packages using pip with the following command
 
 ```
 $ cd src
-$ pip install requirements.txt
+$ pip install -r requirements.txt
 ```
 
