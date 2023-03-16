@@ -18,8 +18,8 @@ loading_tickers = tqdm(tickers)
 
 # Récupère les données de l'API sur chacun des tickers
 for ticker in loading_tickers:
-    loading_tickers.set_description(f"loading symbol {ticker['symbol']}")
-    klines = client.get_historical_klines(ticker['symbol'], Client.KLINE_INTERVAL_8HOUR, "1000 days ago")
+    loading_tickers.set_description(f"loading symbol {ticker}")
+    klines = client.get_historical_klines(ticker, Client.KLINE_INTERVAL_8HOUR, "1000 days ago")
 
     # Transforme les données en DataFrame
     data = pd.DataFrame(klines, columns=["timestamp", "open", "high", "low", "close", "volume", "close_time", "quote_asset_volume", "number_of_trades", "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", "ignore"])
@@ -31,7 +31,7 @@ for ticker in loading_tickers:
     data["close_time"] = pd.to_datetime(data["close_time"], unit="ms").dt.strftime('%Y-%m-%d %H:%M:%S')
 
     # Stocke la DataFrame correspondante dans le dictionnaire
-    ticker_data[ticker['symbol']] = data.to_dict(orient='records')
+    ticker_data[ticker] = data.to_dict(orient='records')
 
 # Exporte les données au format JSON
 with open('ticker_data_hist.json', 'w') as f:
