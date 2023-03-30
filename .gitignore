@@ -1,6 +1,10 @@
 # OPA credential 
 config/config.ini
 
+# OPA mongodb
+docker/mongodb/db/*
+
+
 # pycharm 
 .idea
 

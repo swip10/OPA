@@ -25,3 +25,13 @@ $ cd src
 $ pip install -r requirements.txt
 ```
 
+### mongoDB
+
+Install docker-compose and launch the service using the following script
+
+```
+$ cd docker/mongodb
+$ mkdir db
+$ docker-compose up -d 
+```
+
