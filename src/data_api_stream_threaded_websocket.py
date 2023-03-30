@@ -11,10 +11,10 @@ tickers = config.get_tickers(client)
 twm = ThreadedWebsocketManager()
 # start is required to initialise its internal loop
 twm.start()
+connector = sql_client.get_db_client()
 
 
 def transform_and_append_database(msg):
-    connector = sql_client.get_db_client()
     print(f"message type: {msg['e']}")
     kline = msg["k"]
     data = dict()
@@ -30,7 +30,8 @@ def transform_and_append_database(msg):
     data["taker_buy_base_asset_volume"] = kline["V"]
     data["taker_buy_quote_asset_volume"] = kline["Q"]
     print(data)
-    sql_client.add_line_to_database(data, kline["s"], connector, close_db=True)
+    sql_client.add_line_to_database(data, kline["s"], connector, close_db=False)
+    connector.commit()
 
 
 # example of function to call for opening a steam - todo define one handler for each function
@@ -41,4 +42,7 @@ for ticker in tickers:
 # twm.start_aggtrade_socket(callback=handle_socket_message, symbol=symbol)
 
 sleep(5)
+
 twm.stop()
+twm.join()
+connector.close()

@@ -1,8 +1,8 @@
 import sqlite3
 
 
-def get_db_client():
-    return sqlite3.connect('BDD_hist.sqlite')
+def get_db_client(check_same_thread=False):
+    return sqlite3.connect('BDD_hist.sqlite', check_same_thread=check_same_thread)
 
 
 def add_line_to_database(d, key, conn, close_db=False):
