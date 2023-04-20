@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 
 # Établir une connexion à la base de données PostgreSQL
 conn = psycopg2.connect(
-    port=5432,
-    host='localhost',
-    database='OPA_data_hist',
-    user='postgres2',
-    password='ProjetOPA2023$'
+    port=config.port,
+    host=config.host,
+    database=config.database,
+    user=config.db_user,
+    password=config.db_password
 )
 
 #Récupère tous les noms de table de la BDD et les stocke dans une variable table_names

@@ -9,3 +9,4 @@ tensorflow
 keras
 pymongo
 psycopg2
+matplotlib

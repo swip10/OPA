@@ -8,6 +8,8 @@ BINANCE_API_SECRET = config['API']['BINANCE_API_SECRET']
 
 EXTRACT_TICKERS = ['BTCEUR', 'ETHEUR', 'BNBEUR', 'XRPEUR']
 
+
+
 def get_tickers(client):
     tickers = client.get_symbol_ticker()
     tickers = [ticker["symbol"] for ticker in tickers]
@@ -15,3 +17,10 @@ def get_tickers(client):
         if not ticker in tickers:
             raise KeyError(f"Ticker name {ticker} not available in Binance")
     return EXTRACT_TICKERS
+
+
+host=config["SQL"]["host"]
+port=config["SQL"]["port"]
+database=config["SQL"]["database"]
+db_user=config["SQL"]["db_user"]
+db_password=config["SQL"]["db_password"]
