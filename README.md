@@ -35,3 +35,11 @@ $ mkdir db
 $ docker-compose up -d 
 ```
 
+### postgres 
+
+Install docker-compose and launch the service using the following script
+
+```
+$ cd docker/postgresql
+$ docker-compose up -d 
+```

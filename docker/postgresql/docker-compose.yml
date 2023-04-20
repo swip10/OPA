@@ -1,0 +1,26 @@
+# Use postgres/postgres user/password credentials
+version: '3.5'
+
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+       - postgres-db:/data/postgres
+    ports:
+      - "5432:5432"
+
+  adminer:
+    image: adminer
+#    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  postgres-db:
+    driver: local

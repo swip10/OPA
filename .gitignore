@@ -5,7 +5,7 @@ config/config.ini
 docker/mongodb/db/*
 
 # OPA postgres database
-docker/mongodb/postgres-db/*
+docker/postgresql/postgres-db/*
 
 # pycharm 
 .idea
