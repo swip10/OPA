@@ -1,5 +1,6 @@
 from enum import Enum
 from pprint import pprint
+from clientdb import DBClient
 from pymongo import MongoClient
 from typing import (
     Optional,
@@ -13,7 +14,7 @@ class Collection(Enum):
     KLINES = "klines"
 
 
-class MongoOPA(MongoClient):
+class MongoOPA(MongoClient, DBClient):
     MongoClient.HOST = "127.0.0.1"
     MongoClient.PORT = "27017"
 
@@ -52,3 +53,11 @@ class MongoOPA(MongoClient):
 
     def pprint_one_document_in_collection(self, collection_name: Collection) -> None:
         pprint(self.opa_db[str(collection_name)].find_one())
+
+    def initialize_with_historical_json(self, csv_file, reset: bool = True):
+        self.create_collections(reset)
+        super().initialize_with_historical_json(csv_file, reset)
+
+    def _load_symbol_from_json(self, ticker: str, row: dict):
+        row["symbol"] = ticker
+        self.insert_document_to_collection(row, Collection.KLINES)

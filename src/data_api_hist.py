@@ -2,7 +2,7 @@ from binance.client import Client
 import json
 from tqdm import tqdm
 import pandas as pd
-import config
+from config import config
 
 
 # Initialise le client Binance

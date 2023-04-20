@@ -2,8 +2,9 @@ from binance.streams import ThreadedWebsocketManager
 from binance.client import Client
 from datetime import datetime
 from time import sleep
-import config
+from config import config
 import sql_client
+
 
 client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
 tickers = config.get_tickers(client)

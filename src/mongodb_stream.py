@@ -2,8 +2,8 @@ from binance.streams import ThreadedWebsocketManager
 from binance.client import Client
 from datetime import datetime
 from time import sleep
-import config
-from mongodb import MongoOPA, Collection
+from config import config
+from src.db.mongodb import MongoOPA, Collection
 
 
 client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
@@ -49,3 +49,4 @@ twm.stop()
 twm.join()
 
 client.pprint_one_document_in_collection(Collection.KLINES)
+client.close()

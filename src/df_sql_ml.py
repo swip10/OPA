@@ -1,22 +1,12 @@
-import psycopg2
-import pandas as pd
-import config
 import matplotlib.pyplot as plt
+from src.db.postgres import Postgres
 
-# Établir une connexion à la base de données PostgreSQL
-conn = psycopg2.connect(
-    port=config.port,
-    host=config.host,
-    database=config.database,
-    user=config.db_user,
-    password=config.db_password
-)
+
+# Établir une connexion à la base de données PostgreSQLs
+postgres_client = Postgres()
 
 #Récupère tous les noms de table de la BDD et les stocke dans une variable table_names
-cur = conn.cursor()
-cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
-table_names = cur.fetchall()
-cur.close()
+table_names = postgres_client.get_all_tables()
 #print(table_names)
 
 #Création d'un dictionnaire pour stocker les différents dataframes crées:
@@ -27,16 +17,12 @@ dfs={}
 
 for table_name in table_names:
 
-    cur = conn.cursor()
-    cur.execute(f"SELECT * FROM {table_name[0]};")
+    # Stocker les résultats de la requête dans le dictionnaire  (nom de la table --> dataframe pandas nommé d'après la table requétée)
+    dfs[table_name[0]] = postgres_client.get_data_frame_from_ticker(table_name[0])
 
-# Stocker les résultats de la requête dans le dictionnaire  (nom de la table --> dataframe pandas nommé d'après la table requétée)
-
-    dfs[table_name[0]] = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description]).set_index('timestamp')
-    cur.close()
 
 # Fermer la connexion à la base de données
-conn.close()
+postgres_client.close()
 
 #Imprime un aperçu des df ainsi obtenus
 
@@ -44,7 +30,7 @@ conn.close()
     #print(f"Table name: {table_name}")
     #print(df.head())
 
-ticker="btcusdt"
+ticker = "btceur"
 
 # Récupérer le dataframe souhaité (par exemple, celui de la première table)
 df = dfs[f"{ticker}"]

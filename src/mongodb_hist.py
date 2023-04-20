@@ -1,5 +1,4 @@
-import json
-from mongodb import MongoOPA, Collection
+from src.db.mongodb import MongoOPA, Collection
 
 
 client = MongoOPA(
@@ -7,15 +6,7 @@ client = MongoOPA(
     port=27017
 )
 
-client.create_collections(reset=True)
-
-with open("../ticker_data_hist.json", "r") as json_file:
-    hist_data = json.load(json_file)
-
-for symbol, data in hist_data.items():
-    for line in data:
-        line["symbol"] = symbol
-    client.insert_documents_to_collection(data, Collection.KLINES)
-
+client.initialize_with_historical_json("../data/ticker_data_hist.json")
 client.pprint_one_document_in_collection(Collection.KLINES)
 
+client.close()

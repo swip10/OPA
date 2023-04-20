@@ -16,6 +16,15 @@ BINANCE_API_KEY = put_your_api_key_here
 BINANCE_API_SECRET = put_the_api_scret_here
 ```
 
+### python opa package 
+
+Install the site-packages using pip with the following command 
+
+```
+$ cd OPA
+$ pip install -e .
+```
+
 ### python packages 
 
 Install the site-packages using pip with the following command 
