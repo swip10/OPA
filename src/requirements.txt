@@ -8,3 +8,4 @@ scikit-learn
 tensorflow
 keras
 pymongo
+psycopg2
