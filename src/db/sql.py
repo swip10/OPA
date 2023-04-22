@@ -1,5 +1,8 @@
+import abc
+
 import pandas as pd
 from src.db.clientdb import DBClient
+from src.utils.time import convert_ms_to_timestamp
 
 
 class SQL(DBClient):
@@ -10,7 +13,7 @@ class SQL(DBClient):
         self.cursor = connection.cursor()
         self.tickers_dict = {}
 
-    def create_table(self, ticker: str, reset: bool):
+    def create_table(self, ticker: str, reset: bool) -> None:
         # ToDo reset table if reset is True
         self.tickers_dict[ticker] = ticker if not ticker.startswith("1INCH") else "INCH" + ticker[5:]
         self.cursor.execute(
@@ -28,7 +31,11 @@ class SQL(DBClient):
             f"taker_buy_quote_asset_volume FLOAT)"
         )
 
-    def add_line_to_database(self, d_dict, key, close_db=False):
+    def create_tables(self, tickers: list[str], reset: bool = False) -> None:
+        for ticker in tickers:
+            self.create_table(ticker, reset)
+
+    def add_line_to_database(self, d_dict: dict, key: str, close_db: bool = False) -> None:
         timestamp = d_dict['timestamp']
         open_price = d_dict['open']
         high = d_dict['high']
@@ -53,21 +60,18 @@ class SQL(DBClient):
             self.connection.commit()
             self.connection.close()
 
-    def initialize_with_historical_json(self, csv_file, reset: bool = True):
+    def initialize_with_historical_json(self, csv_file, reset: bool = True) -> None:
         super().initialize_with_historical_json(csv_file, reset)
         self.connection.commit()
 
-    def _load_symbol_from_json(self, ticker: str, row: dict):
+    def _load_symbol_from_json(self, ticker: str, row: dict) -> None:
         self.add_line_to_database(row, self.tickers_dict[ticker], close_db=False)
 
-    def get_all_tables(self):
-        self.cursor.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'"
-        )
-        table_names = self.cursor.fetchall()
-        return table_names
+    @abc.abstractmethod
+    def get_all_table_names(self) -> list[str]:
+        pass
 
-    def get_data_frame_from_ticker(self, ticker):
+    def get_data_frame_from_ticker(self, ticker: str) -> pd.DataFrame:
         self.cursor.execute(f"SELECT * FROM {ticker};")
         df = pd.DataFrame(
             self.cursor.fetchall(),
@@ -75,5 +79,27 @@ class SQL(DBClient):
         ).set_index('timestamp')
         return df
 
-    def close(self):
+    def execute_pandas_query(self, query: str) -> pd.DataFrame:
+        return pd.read_sql_query(query, self.connection)
+
+    def callback_stream_msg(self, msg: dict) -> None:
+        kline = msg["k"]
+        data = dict()
+        data["timestamp"] = convert_ms_to_timestamp(kline["t"])
+        data["close_time"] = convert_ms_to_timestamp(kline["T"])
+        data["open"] = kline["o"]
+        data["high"] = kline["h"]
+        data["low"] = kline["l"]
+        data["close"] = kline["c"]
+        data["volume"] = kline["v"]
+        data["quote_asset_volume"] = kline["q"]
+        data["number_of_trades"] = kline["n"]
+        data["taker_buy_base_asset_volume"] = kline["V"]
+        data["taker_buy_quote_asset_volume"] = kline["Q"]
+        print(data)
+        self.add_line_to_database(data, self.tickers_dict[kline["s"]], close_db=False)
+        self.connection.commit()
+
+    def close(self) -> None:
+        self.connection.commit()
         self.connection.close()

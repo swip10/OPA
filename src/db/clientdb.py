@@ -28,5 +28,9 @@ class DBClient(metaclass=abc.ABCMeta):
     def _load_symbol_from_json(self, ticker: str, row: dict):
         pass
 
+    @abc.abstractmethod
+    def callback_stream_msg(self, msg):
+        pass
+
     def create_table(self, ticker, reset):
         pass

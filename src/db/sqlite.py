@@ -9,3 +9,8 @@ class SQLiteOPA(SQL):
     def __init__(self, check_same_thread: bool = True):
         connection = sqlite3.connect(SQLiteOPA.FILE, check_same_thread=check_same_thread)
         super().__init__(connection)
+
+    def get_all_table_names(self) -> list[str]:
+        self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        table_names = [row[0] for row in self.cursor.fetchall()]
+        return table_names

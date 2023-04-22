@@ -1,23 +1,20 @@
-import sqlite3
-import pandas as pd
+from src.db.sqlite import SQLiteOPA
+
 
 # Se connecter à la base de données
-conn = sqlite3.connect('BDD_hist.sqlite')
+sqlite_client = SQLiteOPA()
 
 # Récupérer les noms des tables
-c = conn.cursor()
-c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-tables = [row[0] for row in c.fetchall()]
+table_names = sqlite_client.get_all_table_names()
 
 # Initialiser le dictionnaire de résultats
 results = {}
-for table in tables:
+for table in table_names:
     results[table] = []
 
 # Parcourir chaque table et tester chaque combinaison de SMA
-for table in tables:
-    df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
-    df.set_index('timestamp', inplace=True)
+for table in table_names:
+    df = sqlite_client.get_data_frame_from_ticker(table)
 
     # Initialiser le dictionnaire des wallets pour chaque combinaison de SMA
     wallets = {}
@@ -56,7 +53,7 @@ for table in tables:
 
 # Afficher les résultats
 # Trouver le meilleur résultat pour chaque table
-for table in tables:
+for table in table_names:
     best_result = max(results[table], key=lambda x: x['wallet'])
-    print(f"Table {table}: SMA1={best_result['sma1']}, SMA2={best_result['sma2']}, Wallet={best_result['wallet']}")
-
+    print(f"Table {table}: SMA1={best_result['sma1']}, SMA2={best_result['sma2']}, "
+          f"Wallet={round(best_result['wallet'], 2)}")

@@ -1,30 +1,21 @@
-import sqlite3
-import pandas as pd
+from src.db.sqlite import SQLiteOPA
+
 
 # Se connecter à la base de données
-conn = sqlite3.connect('BDD_hist.sqlite')
-
-# Vérifier la connexion
-if conn:
-    print("La connexion à la base de données est établie.")
-else:
-    print("La connexion à la base de données a échoué.")
+sqlite_client = SQLiteOPA()
 
 # Récupérer les noms des tables
-c = conn.cursor()
-c.execute("SELECT name FROM sqlite_master WHERE type='table';")
-tables = [row[0] for row in c.fetchall()]
-print(tables)
+table_names = sqlite_client.get_all_table_names()
+print(table_names)
 
 # Initialiser le dictionnaire des wallets pour chaque table
 wallets = {}
-for table in tables:
+for table in table_names:
     wallets[table] = 1000
 
 # Parcourir chaque table et calculer les moyennes mobiles
-for table in tables:
-    df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
-    df.set_index('timestamp', inplace=True)
+for table in table_names:
+    df = sqlite_client.get_data_frame_from_ticker(table)
     df['sma20'] = df['close'].rolling(window=20).mean()
     df['sma50'] = df['close'].rolling(window=50).mean()
 
@@ -42,9 +33,9 @@ for table in tables:
 
 # Trouver le wallet avec le plus d'argent à la fin
 max_wallet = max(wallets, key=wallets.get)
-print(f"Le wallet avec le plus d'argent est {max_wallet} avec {wallets[max_wallet]}$ à la fin.")
+print(f"Le wallet avec le plus d'argent est {max_wallet} avec {round(wallets[max_wallet], 2)}$ à la fin.")
 
 # Afficher les autres wallets
 for wallet in wallets:
     if wallet != max_wallet:
-        print(f"Le wallet {wallet} a {wallets[wallet]}$ à la fin.")
+        print(f"Le wallet {wallet} a {round(wallets[wallet], 2)}$ à la fin.")

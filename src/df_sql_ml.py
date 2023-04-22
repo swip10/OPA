@@ -6,7 +6,7 @@ from src.db.postgres import Postgres
 postgres_client = Postgres()
 
 #Récupère tous les noms de table de la BDD et les stocke dans une variable table_names
-table_names = postgres_client.get_all_tables()
+table_names = postgres_client.get_all_table_names()
 #print(table_names)
 
 #Création d'un dictionnaire pour stocker les différents dataframes crées:
