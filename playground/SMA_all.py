@@ -57,3 +57,5 @@ for table in table_names:
     best_result = max(results[table], key=lambda x: x['wallet'])
     print(f"Table {table}: SMA1={best_result['sma1']}, SMA2={best_result['sma2']}, "
           f"Wallet={round(best_result['wallet'], 2)}")
+
+sqlite_client.close()

@@ -39,3 +39,5 @@ print(f"Le wallet avec le plus d'argent est {max_wallet} avec {round(wallets[max
 for wallet in wallets:
     if wallet != max_wallet:
         print(f"Le wallet {wallet} a {round(wallets[wallet], 2)}$ à la fin.")
+
+sqlite_client.close()
