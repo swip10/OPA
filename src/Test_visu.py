@@ -5,10 +5,8 @@ from src.db.sqlite import SQLiteOPA
 # Se connecter à la base de données
 sqlite_client = SQLiteOPA()
 
-# Récupérer les données de clôture pour un ticker spécifique
+# Récupérer les données dans un DataFrame pour un ticker spécifique
 symbol = 'BTCEUR'
-
-# Charger les données dans un DataFrame
 df = sqlite_client.get_data_frame_from_ticker(symbol)
 
 # Calculer les moyennes mobiles sur les colonnes 'close'
