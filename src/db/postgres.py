@@ -1,5 +1,5 @@
 import psycopg2
-
+import pandas as pd
 from config import config
 from src.db.sql import SQL
 
@@ -22,4 +22,14 @@ class Postgres(SQL):
         )
         table_names = self.cursor.fetchall()
         return table_names
+    
+    #Fonction permettant de récupérer un df à partir d'une table d'un ticker spécifié:
+    
+    def get_table_as_dataframe(self, ticker: str) -> pd.DataFrame:
+
+        self.cursor.execute(f"SELECT * FROM {ticker}")
+        table_data = self.cursor.fetchall()
+        table_columns = [desc[0] for desc in self.cursor.description]
+        return pd.DataFrame(table_data, columns=table_columns)
+
 
