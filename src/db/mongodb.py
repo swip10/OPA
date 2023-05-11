@@ -1,7 +1,12 @@
+from abc import ABC
 from enum import Enum
 from pprint import pprint
-from clientdb import DBClient
+
+import pandas as pd
+
+from src.db.clientdb import DBClient
 from pymongo import MongoClient
+from src.utils.time import convert_ms_to_timestamp
 from typing import (
     Optional,
     Sequence,
@@ -12,6 +17,7 @@ from typing import (
 
 class Collection(Enum):
     KLINES = "klines"
+    WIKI = "wiki"
 
 
 class MongoOPA(MongoClient, DBClient):
@@ -25,7 +31,7 @@ class MongoOPA(MongoClient, DBClient):
     ) -> None:
         super().__init__(host, port)
         self.db_name = "opa"
-        self.collection_names = [Collection.KLINES]
+        self.collection_names = [Collection.KLINES, Collection.WIKI]
 
     @property
     def opa_db(self):
@@ -43,13 +49,15 @@ class MongoOPA(MongoClient, DBClient):
         if reset:
             self.reset_collections()
         for collection_name in self.collection_names:
-            self.opa_db.create_collection(name=str(collection_name))
+            if str(collection_name) not in self.opa_db.list_collection_names():
+                self.opa_db.create_collection(name=str(collection_name))
 
     def insert_document_to_collection(self, doc: Dict, collection_name: Collection) -> None:
         self.opa_db[str(collection_name)].insert_one(doc)
 
     def insert_documents_to_collection(self, docs, collection_name: Collection) -> None:
-        self.opa_db[str(collection_name)].insert_many(docs)
+        if len(docs) != 0:
+            self.opa_db[str(collection_name)].insert_many(docs)
 
     def pprint_one_document_in_collection(self, collection_name: Collection) -> None:
         pprint(self.opa_db[str(collection_name)].find_one())
@@ -58,6 +66,43 @@ class MongoOPA(MongoClient, DBClient):
         self.create_collections(reset)
         super().initialize_with_historical_json(csv_file, reset)
 
+    def initialize_with_wiki_revisions(self, editions, reset: bool = False):
+        self.create_collections(reset)
+        self.insert_documents_to_collection(editions, Collection.WIKI)
+
+    def get_wiki_last_revision(self):
+        res = self.opa_db[str(Collection.WIKI)].aggregate([
+          {"$project": { "maxId": {"$max": "$revid" } }},
+        ])
+        all_max = [line["maxId"] for line in res]
+        if len(all_max) == 0:
+            return 1054294052
+        else:
+            return max(all_max)
+
+    def get_average_sentiment_over_time(self) -> pd.DataFrame:
+        res = self.opa_db[str(Collection.WIKI)].aggregate([
+            {"$project": {"_id": "$id", "timestamp": "$timestamp", "average_sentiment": {"$avg": "$sentiments"}}},
+        ])
+        return pd.DataFrame(res)
+
     def _load_symbol_from_json(self, ticker: str, row: dict):
         row["symbol"] = ticker
         self.insert_document_to_collection(row, Collection.KLINES)
+
+    def callback_stream_msg(self, msg):
+        kline = msg["k"]
+        data = dict()
+        data["symbol"] = kline["s"]
+        data["timestamp"] = convert_ms_to_timestamp(kline["t"])
+        data["close_time"] = convert_ms_to_timestamp(kline["T"])
+        data["open"] = kline["o"]
+        data["high"] = kline["h"]
+        data["low"] = kline["l"]
+        data["close"] = kline["c"]
+        data["volume"] = kline["v"]
+        data["quote_asset_volume"] = kline["q"]
+        data["number_of_trades"] = kline["n"]
+        data["taker_buy_base_asset_volume"] = kline["V"]
+        data["taker_buy_quote_asset_volume"] = kline["Q"]
+        self.insert_document_to_collection(doc=data, collection_name=Collection.KLINES)
