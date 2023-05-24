@@ -6,7 +6,8 @@ config.read(Path(__file__).parents[1].absolute() / "config" / "config.ini")
 BINANCE_API_KEY = config['API']['BINANCE_API_KEY']
 BINANCE_API_SECRET = config['API']['BINANCE_API_SECRET']
 
-EXTRACT_TICKERS = ['BTCEUR', 'ETHEUR', 'BNBEUR', 'XRPEUR']
+# C'est ici que l'on choisi la liste des tickers que l'on veux appeler dans le script stream
+EXTRACT_TICKERS = ['ETHBTC']
 
 
 def get_tickers(client):

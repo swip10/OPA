@@ -28,7 +28,9 @@ class SQL(DBClient):
             f"quote_asset_volume FLOAT, "
             f"number_of_trades INTEGER, "
             f"taker_buy_base_asset_volume FLOAT, "
-            f"taker_buy_quote_asset_volume FLOAT)"
+            f"taker_buy_quote_asset_volume FLOAT, "
+            # ajout de la colonne pour connaître la provenance de la donnée (true = stream, false = hist)
+            f"data_origin BOOLEAN DEFAULT True)"
         )
 
     def create_tables(self, tickers: list[str], reset: bool = False) -> None:
@@ -47,10 +49,12 @@ class SQL(DBClient):
         number_of_trades = d_dict['number_of_trades']
         taker_buy_base_asset_volume = d_dict['taker_buy_base_asset_volume']
         taker_buy_quote_asset_volume = d_dict['taker_buy_quote_asset_volume']
+        # Recupération de la données data_origin du dictionnaire (soit en provenance du JSON hist, soit du callback_stream_msg)
+        data_origin = d_dict['data_origin']
 
         self.cursor.execute(
             f"INSERT INTO {key} VALUES ('{timestamp}', {open_price}, {high}, {low}, {close}, {volume}, '{close_time}', "
-            f"{quote_asset_volume}, {number_of_trades}, {taker_buy_base_asset_volume}, {taker_buy_quote_asset_volume}) ON CONFLICT (timestamp) DO NOTHING"
+            f"{quote_asset_volume}, {number_of_trades}, {taker_buy_base_asset_volume}, {taker_buy_quote_asset_volume}, {data_origin}) ON CONFLICT (timestamp) DO NOTHING"
         )
 
         if close_db:
@@ -93,6 +97,8 @@ class SQL(DBClient):
         data["number_of_trades"] = kline["n"]
         data["taker_buy_base_asset_volume"] = kline["V"]
         data["taker_buy_quote_asset_volume"] = kline["Q"]
+        # Création de la colonne data_origin à True car nous sommes dans la partie stream
+        data["data_origin"] = True
         print(data)
         self.add_line_to_database(data, self.tickers_dict[kline["s"]], close_db=False)
         self.connection.commit()

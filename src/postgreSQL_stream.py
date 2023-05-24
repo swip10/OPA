@@ -13,11 +13,12 @@ twm = ThreadedWebsocketManager()
 twm.start()
 
 postgres_client = Postgres()
-postgres_client.create_tables(tickers, reset=False)
+# update 24_05 : reset --> True
+postgres_client.create_tables(tickers, reset=True)
 
 for ticker in tickers:
     twm.start_kline_socket(callback=postgres_client.callback_stream_msg, symbol=ticker, interval='1s')
-
+ 
 sleep(5)
 
 twm.stop()
