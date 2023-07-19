@@ -5,13 +5,14 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 # from sklearn.model_selection import train_test_split
 from time_serie_base_line_model import TimeSerieBaseLineModel
+from config import config
 
 
 # good scenario 4 to test - pass currency type as input
 # https://stackoverflow.com/questions/65345953/adding-exogenous-variables-to-my-univariate-lstm-model
 
 
-with open("../../ticker_data_hist.json", "r") as json_file:
+with open(config.CHEMIN_JSON_LOCAL, "r") as json_file: 
     hist_data = json.load(json_file)
 
 list_df = []

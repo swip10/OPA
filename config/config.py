@@ -9,6 +9,8 @@ BINANCE_API_SECRET = config['API']['BINANCE_API_SECRET']
 # C'est ici que l'on choisi la liste des tickers que l'on veux appeler dans le script stream
 EXTRACT_TICKERS = ['ETHBTC']
 
+# C'est ici que l'on récupère le chemin local du JSON de données hist
+CHEMIN_JSON_LOCAL = config['JSON']['CHEMIN_JSON']
 
 def get_tickers(client):
     tickers = client.get_symbol_ticker()
