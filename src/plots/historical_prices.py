@@ -1,8 +1,9 @@
 import json
 import pandas as pd
 import plotly.express as px
+from config import config
 
-with open("../ticker_data_hist.json", "r") as json_file:
+with open(config.CHEMIN_JSON_LOCAL, "r") as json_file:
     hist_data = json.load(json_file)
 
 list_df = []
