@@ -15,3 +15,4 @@ tqdm
 transformers
 mwclient
 numpy
+beautifulsoup4

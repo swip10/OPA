@@ -6,7 +6,7 @@ postgres=Postgres()
 # On récupère le nom des différentes tables de la base de donnée, ainsi que le df pour le ticker choisi (nom, ou position dans la liste obtenue)
 # table_names=postgres.get_all_table_names()
 # ici pour l'exemple on choisi que deux ticker ticker
-table_names = ['BTCUSDT', 'ETHEUR']
+table_names = ['BTCUSDT', 'ETHEUR','LTCEUR']
 # Initialiser le dictionnaire de résultats
 results = {}
 for table in table_names:

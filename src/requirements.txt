@@ -12,3 +12,6 @@ psycopg2; platform_system == "Windows"
 psycopg2-binary; platform_system == "Linux"
 matplotlib
 tqdm
+mwclient
+transformers
+beautifulsoup4
