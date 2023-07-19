@@ -15,6 +15,7 @@ from config import config
 with open(config.CHEMIN_JSON_LOCAL, "r") as json_file: 
     hist_data = json.load(json_file)
 
+
 list_df = []
 for key in hist_data:
     sub_df = pd.DataFrame(hist_data[key])
