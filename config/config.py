@@ -19,7 +19,7 @@ def get_tickers(client):
     return EXTRACT_TICKERS
 
 
-host = config["SQL"]["host"]
+host = config['SQL']['host']
 port = config["SQL"]["port"]
 database = config["SQL"]["database"]
 db_user = config["SQL"]["db_user"]
