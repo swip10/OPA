@@ -98,7 +98,7 @@ for date in tqdm(future_dates, desc="Prédiction des valeurs futures"):
     future_predictions.append(yhat)
     training_data_tot.append(yhat)  # Met à jour les données d'entraînement pour la prochaine prédiction
 
-# Affichage du graphique des prédictions pour l'ensemble futur de données
+# Affichage du graphique des prédictions pour l'ensemble des données futures
 plt.figure(figsize=(15, 9))
 plt.grid(True)
 plt.plot(future_dates, future_predictions, color='blue', marker='o', linestyle='dashed', label='Future BTC predicted price')
