@@ -107,3 +107,4 @@ plt.xlabel('Date')
 plt.ylabel('Price')
 plt.legend()
 plt.show()
+#essayer de prédire la suite
