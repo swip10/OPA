@@ -1,7 +1,7 @@
 from pathlib import Path
 import configparser
 
-config = configparser.ConfigParser()
+config = configparser.RawConfigParser()
 config.read(Path(__file__).parents[1].absolute() / "config" / "config.ini")
 BINANCE_API_KEY = config['API']['BINANCE_API_KEY']
 BINANCE_API_SECRET = config['API']['BINANCE_API_SECRET']
@@ -27,8 +27,15 @@ database = config["SQL"]["database"]
 db_user = config["SQL"]["db_user"]
 db_password = config["SQL"]["db_password"]
 
-twitterConsumerKey = config["TWITTER"]["consumerKey"]
-twitterConsumerSecret = config["TWITTER"]["consumerSecret"]
-twitterAccessToken = config["TWITTER"]["accessToken"]
-twitterAccessTokenSecret = config["TWITTER"]["accessTokenSecret"]
-twitterBearerToken = config["TWITTER"]["bearerToken"]
+try:
+    twitterConsumerKey = config["TWITTER"].get("consumerKey", "")
+    twitterConsumerSecret = config["TWITTER"].get("consumerSecret", "")
+    twitterAccessToken = config["TWITTER"].get("accessToken", "")
+    twitterAccessTokenSecret = config["TWITTER"].get("accessTokenSecret", "")
+    twitterBearerToken = config["TWITTER"].get("bearerToken", "")
+except configparser.NoSectionError:
+    twitterConsumerKey = ""
+    twitterConsumerSecret = ""
+    twitterAccessToken = ""
+    twitterAccessTokenSecret = ""
+    twitterBearerToken = ""

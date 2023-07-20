@@ -16,3 +16,4 @@ mwclient
 numpy
 beautifulsoup4
 statsmodels
+dash
