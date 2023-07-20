@@ -1,7 +1,7 @@
 from tensorflow import keras
-from tensorflow.keras.layers import Bidirectional, Dropout, Activation, Dense, LSTM, Lambda, concatenate
-from tensorflow.compat.v1.keras.layers import CuDNNLSTM
-from tensorflow.keras.models import Model
+from keras.layers import Bidirectional, Dropout, Activation, Dense, LSTM, Lambda, concatenate
+from keras.layers import CuDNNLSTM
+from keras.models import Model
 
 # extracted from https://medium.com/codex/time-series-prediction-using-lstm-in-python-19b1187f580f
 
