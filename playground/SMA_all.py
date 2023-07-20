@@ -1,12 +1,12 @@
-from src.db.sqlite import SQLiteOPA
+from src.db.postgres import Postgres
 
 
-# Se connecter à la base de données
-sqlite_client = SQLiteOPA()
+postgres=Postgres()
 
-# Récupérer les noms des tables
-table_names = sqlite_client.get_all_table_names()
-
+# On récupère le nom des différentes tables de la base de donnée, ainsi que le df pour le ticker choisi (nom, ou position dans la liste obtenue)
+# table_names=postgres.get_all_table_names()
+# ici pour l'exemple on choisi que deux ticker ticker
+table_names = ['BTCUSDT', 'ETHEUR']
 # Initialiser le dictionnaire de résultats
 results = {}
 for table in table_names:
@@ -14,7 +14,7 @@ for table in table_names:
 
 # Parcourir chaque table et tester chaque combinaison de SMA
 for table in table_names:
-    df = sqlite_client.get_data_frame_from_ticker(table)
+    df = postgres.get_table_as_dataframe(table)
 
     # Initialiser le dictionnaire des wallets pour chaque combinaison de SMA
     wallets = {}
@@ -58,4 +58,4 @@ for table in table_names:
     print(f"Table {table}: SMA1={best_result['sma1']}, SMA2={best_result['sma2']}, "
           f"Wallet={round(best_result['wallet'], 2)}")
 
-sqlite_client.close()
+
