@@ -5,7 +5,7 @@ from transformers import pipeline
 from src.db.mongodb import MongoOPA
 # from src.db.mongodb import Collection
 
-
+# config pour selectioner le serveur et le port
 client = MongoOPA(
     host="127.0.0.1",
     port=27017
