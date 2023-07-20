@@ -1,6 +1,7 @@
 # OPA credential 
 config/config.ini
 data/ticker_data_hist_new.json
+data/*
 
 # OPA mongodb
 docker/mongodb/db/*
