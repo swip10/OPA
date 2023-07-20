@@ -66,6 +66,8 @@ class SQL(DBClient):
         self.connection.commit()
 
     def _load_symbol_from_json(self, ticker: str, row: dict) -> None:
+        if 'data_origin' not in row:
+            row['data_origin'] = False
         self.add_line_to_database(row, self.tickers_dict[ticker], close_db=False)
 
     @abc.abstractmethod

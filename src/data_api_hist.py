@@ -26,6 +26,10 @@ for ticker in loading_tickers:
 
     # Change le type de la colonne timestamp en datetime
     data["timestamp"] = pd.to_datetime(data["timestamp"], unit="ms").dt.strftime('%Y-%m-%d %H:%M:%S')
+    data["close_time"] = pd.to_datetime(data["close_time"], unit="ms").dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    # Rajouter la colonne data_origin avec la valeur False pour dire qu'il s'agit de données historique
+    data["data_origin"] = False
 
     # Stocke la DataFrame correspondante dans le dictionnaire
     ticker_data[ticker['symbol']] = data.to_dict(orient='records')
