@@ -1,16 +1,11 @@
 from dash import Dash
 from dash import (
-    dash_table,
     html,
     dcc,
 )
-import pandas as pd
-
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from tqdm import tqdm
-
 from dash.dependencies import Output, Input
 
 from src.db.postgres import Postgres
@@ -22,7 +17,7 @@ tickers = postgres.get_all_table_names()
 dropdown1_options = [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = Dash(__name__, external_stylesheets=external_stylesheets,suppress_callback_exceptions=True)
+app = Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -30,14 +25,13 @@ app.layout = html.Div([
 ])
 
 index_page = html.Div([
-    html.H1('OPA dashboard', style={'color' : 'aquamarine', 'textAlign': 'center'}),
+    html.H1('OPA dashboard', style={'color': 'aquamarine', 'textAlign': 'center'}),
     html.Button(dcc.Link('Historical prices from PostGres DB', href='/page-1')),
     html.Br(),
     html.Button(dcc.Link('Find best currency to trade from moving average', href='/page-2'))
 ], style={'alignItems': 'center'})
 
 # Page 1
-
 layout_1 = html.Div([
     html.H1('Historical prices from PostGres DB', style={'textAlign': 'center', 'color': 'mediumturquoise'}),
 
@@ -50,7 +44,7 @@ layout_1 = html.Div([
 
     html.Br(),
     html.Button(dcc.Link('Go back to home page', href='/'))
-], style = {'background' : 'beige'})
+], style={'background': 'beige'})
 
 
 @app.callback(Output(component_id='page-1-graph', component_property='figure'),
@@ -66,7 +60,8 @@ def update_graph_1(ticker):
 
 # Page 2
 layout_2 = html.Div([
-    html.H1('Find best currency to trade from moving average', style={'textAlign': 'center', 'color': 'mediumturquoise'}),
+    html.H1('Find best currency to trade from moving average',
+            style={'textAlign': 'center', 'color': 'mediumturquoise'}),
     html.Button('Re-compute', id='loading-input-1', n_clicks=0),
     # dcc.Input(id="loading-input-1", value='Input triggers local spinner'),
     dcc.Loading(
@@ -83,7 +78,7 @@ layout_2 = html.Div([
 @app.callback([Output(component_id="loading-output-1", component_property="children"),
                Output(component_id='page2-output', component_property='children')],
               Input(component_id="loading-input-1", component_property="n_clicks"))
-def input_triggers_spinner(value):
+def input_triggers_spinner(_):
     message = sma()
     return "", message
 
@@ -102,8 +97,6 @@ def display_page(pathname):
 
 def sma():
     postgres = Postgres()
-
-    # On récupère le nom des différentes tables de la base de donnée, ainsi que le df pour le ticker choisi (nom, ou position dans la liste obtenue)
     table_names = postgres.get_all_table_names()
     table_names = [name[0] for name in table_names]
     # ici pour l'exemple on choisi que deux ou trois ticker
