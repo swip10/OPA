@@ -33,7 +33,7 @@ try:
     twitterAccessToken = config["TWITTER"].get("accessToken", "")
     twitterAccessTokenSecret = config["TWITTER"].get("accessTokenSecret", "")
     twitterBearerToken = config["TWITTER"].get("bearerToken", "")
-except configparser.NoSectionError:
+except KeyError:
     twitterConsumerKey = ""
     twitterConsumerSecret = ""
     twitterAccessToken = ""
