@@ -9,6 +9,7 @@ from tqdm import tqdm
 from dash.dependencies import Output, Input
 
 from src.db.postgres import Postgres
+from src.plots.wiki import get_wiki_plot
 
 
 postgres = Postgres()
@@ -28,7 +29,9 @@ index_page = html.Div([
     html.H1('OPA dashboard', style={'color': 'aquamarine', 'textAlign': 'center'}),
     html.Button(dcc.Link('Historical prices from PostGres DB', href='/page-1')),
     html.Br(),
-    html.Button(dcc.Link('Find best currency to trade from moving average', href='/page-2'))
+    html.Button(dcc.Link('Find best currency to trade from moving average', href='/page-2')),
+    html.Br(),
+    html.Button(dcc.Link('Sentiment analysis from MongoDB', href='/page-3'))
 ], style={'alignItems': 'center'})
 
 # Page 1
@@ -83,6 +86,16 @@ def input_triggers_spinner(_):
     return "", message
 
 
+# Page 3
+layout_3 = html.Div([
+    html.H1('Sentiment analysis from MongoDB', style={'textAlign': 'center', 'color': 'mediumturquoise'}),
+    html.Div(dcc.Graph(id='page-3-graph', figure=get_wiki_plot())),
+
+    html.Br(),
+    html.Button(dcc.Link('Go back to home page', href='/'))
+], style={'background': 'beige'})
+
+
 # Mise à jour de l'index
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
@@ -91,6 +104,8 @@ def display_page(pathname):
         return layout_1
     elif pathname == '/page-2':
         return layout_2
+    elif pathname == '/page-3':
+        return layout_3
     else:
         return index_page
 

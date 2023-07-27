@@ -1,20 +1,19 @@
 import json
+import joblib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
-# from sklearn.model_selection import train_test_split
 from time_serie_base_line_model import TimeSerieBaseLineModel
 from config import config
 
 
 # good scenario 4 to test - pass currency type as input
 # https://stackoverflow.com/questions/65345953/adding-exogenous-variables-to-my-univariate-lstm-model
-
+SAVE_MODEL = False
 
 with open(config.CHEMIN_JSON_LOCAL, "r") as json_file: 
     hist_data = json.load(json_file)
-
 
 list_df = []
 for key in hist_data:
@@ -27,7 +26,7 @@ df = df[["close", "symbol", "volume"]]
 df = df.astype({'close': 'float', 'volume': 'float'})
 
 # filter on only one currency during dev
-df = df.query("symbol == 'BTCEUR'")
+df = df.query("symbol == 'ETHBTC'")
 
 # scaler should be only train on test set
 scaler = MinMaxScaler()
@@ -35,6 +34,10 @@ close_price = df.close.values.reshape(-1, 1)
 scaled_close = scaler.fit_transform(close_price)
 scaler_volume = MinMaxScaler()
 scaled_volume = scaler_volume.fit_transform(df.volume.values.reshape(-1, 1))
+
+if SAVE_MODEL:
+    joblib.dump(scaler, 'scaler_close_price.save')
+    joblib.dump(scaler_volume, 'scaler_volume.save')
 
 sequence_len = 60
 
@@ -69,6 +72,7 @@ model = TimeSerieBaseLineModel(
     output_shape=y_train.shape[-1],
     dropout=0.05
 )
+model.currency = "ETHBTC"
 
 model.compile(
     loss='mean_squared_error',
@@ -88,6 +92,8 @@ history = model.fit(
     shuffle=False,
     validation_data=(x_test, y_test)
 )
+if SAVE_MODEL:
+    model.save("keras_next")
 
 plt.plot(history.history['loss'], label="train")
 plt.plot(history.history['val_loss'], label='test')

@@ -10,6 +10,7 @@ class TimeSerieBaseLineModel(Model):
 
     def __init__(self, seq_len, input_shape, output_shape, dropout=0.2):
         super().__init__()
+        self.currency = ""
         self.dropout = dropout
         self.window_size = seq_len - 1
         self.lstm1 = LSTM(self.window_size, return_sequences=True, input_shape=(self.window_size, input_shape))
