@@ -1,6 +1,7 @@
 import abc
 
 import pandas as pd
+from typing import List
 from src.db.clientdb import DBClient
 from src.utils.time import convert_ms_to_timestamp
 
@@ -33,7 +34,7 @@ class SQL(DBClient):
             f"data_origin BOOLEAN DEFAULT True)"
         )
 
-    def create_tables(self, tickers: list[str], reset: bool = False) -> None:
+    def create_tables(self, tickers: List[str], reset: bool = False) -> None:
         for ticker in tickers:
             self.create_table(ticker, reset)
 
@@ -71,7 +72,7 @@ class SQL(DBClient):
         self.add_line_to_database(row, self.tickers_dict[ticker], close_db=False)
 
     @abc.abstractmethod
-    def get_all_table_names(self) -> list[str]:
+    def get_all_table_names(self) -> List[str]:
         pass
 
     def get_data_frame_from_ticker(self, ticker: str) -> pd.DataFrame:

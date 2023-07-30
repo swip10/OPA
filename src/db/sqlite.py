@@ -1,5 +1,6 @@
 import sqlite3
 import pathlib
+from typing import List
 from src.db.sql import SQL
 
 
@@ -10,7 +11,7 @@ class SQLiteOPA(SQL):
         connection = sqlite3.connect(SQLiteOPA.FILE, check_same_thread=check_same_thread)
         super().__init__(connection)
 
-    def get_all_table_names(self) -> list[str]:
+    def get_all_table_names(self) -> List[str]:
         self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         table_names = [row[0] for row in self.cursor.fetchall()]
         return table_names

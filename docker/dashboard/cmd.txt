@@ -1,0 +1,2 @@
+docker image build -t opa_dash:latest -f docker/OPA/Dockerfile .
+docker run --name opa_dash -it --rm --network host opa_dashboard

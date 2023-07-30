@@ -1,5 +1,6 @@
 import psycopg2
 import pandas as pd
+from typing import List
 from config import config
 from src.db.sql import SQL
 
@@ -16,7 +17,7 @@ class Postgres(SQL):
         )
         super().__init__(connection)
 
-    def get_all_table_names(self) -> list[str]:
+    def get_all_table_names(self) -> List[str]:
         self.cursor.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'"
         )

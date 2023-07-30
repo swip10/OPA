@@ -29,6 +29,8 @@ Build()
 {
     cd ..
     docker image build -t opa:latest -f docker/OPA/Dockerfile .
+    docker image build -t opa/dashboard:latest -f docker/dashboard/Dockerfile .
+    docker image build -t opa/fastapi:latest -f docker/fastAPI/Dockerfile .
     cd ./docker
 }
 
@@ -42,6 +44,10 @@ Run()
     docker-compose up -d 
     cd ./../postgresql
     docker-compose up -d 
+    cd ./../dashboard
+    docker-compose up -d 
+    cd ./../fastAPI
+    docker-compose up -d 
     cd ..
 }
 
@@ -51,9 +57,14 @@ Run()
 ################################################################################
 Stop()
 {
+    echo "Stop containers" 
     cd ./mongodb
     docker-compose down
     cd ./../postgresql
+    docker-compose down 
+    cd ./../dashboard
+    docker-compose down 
+    cd ./../fastAPI
     docker-compose down 
     cd ..
 }
@@ -67,23 +78,23 @@ Stop()
 # Process the input options. Add options as needed.                            #
 ################################################################################
 # Get the options
-while getopts ":h" option; do
+while getopts ":abrsh:" option; do
    case $option in
-    case $option in
       a) # display Help
          Build
          Run
          exit;;
-    case $option in
       b) # display Help
          Build
          exit;;
-      h) # display Help
-         Help
+      r) # display Help
+         Run
          exit;;
-    case $option in
       s) # display Help
          Stop
+         exit;;
+      h) # display Help
+         Help
          exit;;
      \?) # incorrect option
          echo "Error: Invalid option"
@@ -91,4 +102,4 @@ while getopts ":h" option; do
    esac
 done
 
-echo "Hello world!"
+echo "End launcher OPA !"

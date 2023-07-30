@@ -7,6 +7,7 @@ COPY ./requirements.txt /code/requirements.txt
 COPY ./setup.py /code/setup.py 
 COPY ./README.md /code/README.md
 COPY ./models /code/models
+COPY ./config /code/config
 COPY ./tests /code/tests
 
 RUN pip install -r /code/requirements.txt

@@ -1,14 +1,14 @@
 version: "3.9"
 services:
-  fastapi:
-    image: opa/fastapi:latest
-    container_name: fastapi
+  dash:
+    image: opa/dashboard:latest
+    container_name: opa_dash
     network_mode: "host"
 #    networks:
 #      - network1
 #    ports:
-#      - target: 8000
-#        published: 8000
+#      - target: 8050
+#        published: 8050
 #networks:
 #  network1:
 #    external: true
