@@ -1,20 +1,9 @@
 # OPA
 
 Welcome to the OPA projet ! 
-The goal is to build a pipeline to automatically process cryptomoney stock exchange and train a model to put and call orders. 
+The goal is to build a pipeline to automatically process cryptomoney stock exchange and train a model to put and call orders.
 
-## installation 
-
-### configuration API keys 
-
-At the root of the projet at folder name "config" and create a file config.ini inside.  
-The config/config.ini file should contain the following info:
-
-```
-[API]
-BINANCE_API_KEY = put_your_api_key_here
-BINANCE_API_SECRET = put_the_api_scret_here
-```
+## installation
 
 ### python opa package 
 
@@ -33,6 +22,35 @@ Install the site-packages using pip with the following command
 $ cd src
 $ pip install -r requirements.txt
 ```
+
+## build the docs
+
+```
+# Enter the Sphinx project
+cd docs/
+
+# Build with make
+make html
+
+# Open with your preferred browser, pointing it to the documentation index page
+firefox _build/html/index.html
+```
+
+
+## Configurations
+
+### configuration API keys 
+
+At the root of the projet at folder name "config" and create a file config.ini inside.  
+The config/config.ini file should contain the following info:
+
+```
+[API]
+BINANCE_API_KEY = put_your_api_key_here
+BINANCE_API_SECRET = put_the_api_scret_here
+```
+
+## start services
 
 ### mongoDB
 

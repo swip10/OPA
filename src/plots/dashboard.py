@@ -10,6 +10,7 @@ from dash.dependencies import Output, Input
 
 from src.db.postgres import Postgres
 from src.plots.wiki import get_wiki_plot
+from config.config import CHEMIN_JSON_LOCAL
 
 
 postgres = Postgres()
@@ -46,6 +47,10 @@ layout_1 = html.Div([
     html.Div(dcc.Graph(id='page-1-graph')),
 
     html.Br(),
+    html.Button('Load default example historical csv file', id="load_template", n_clicks=0),
+    html.P(id='placeholder'),
+
+    html.Br(),
     html.Button(dcc.Link('Go back to home page', href='/'))
 ], style={'background': 'beige'})
 
@@ -59,6 +64,18 @@ def update_graph_1(ticker):
     df = Postgres().get_table_as_dataframe(ticker)
     fig = px.line(df, x="timestamp", y="close")
     return fig
+
+
+@app.callback(
+    Output("placeholder", "children"),
+    Input('load_template', 'n_clicks'),
+)
+def load_default_csv_file(n_clicks):
+    if n_clicks == 0:
+        return
+    postgres_client = Postgres()
+    postgres_client.initialize_with_historical_json(CHEMIN_JSON_LOCAL, reset=True)
+    postgres_client.close()
 
 
 # Page 2

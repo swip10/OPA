@@ -23,3 +23,5 @@ pydantic
 pytest
 requests
 uvicorn
+sphinx
+sphinx-rtd-theme

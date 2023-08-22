@@ -3,7 +3,18 @@ import plotly.graph_objects as go
 import numpy as np
 
 
-def get_wiki_plot() -> go.Figure:
+def get_wiki_plot(no_failure: bool = True) -> go.Figure:
+    try:
+        fig = get_wiki_plot_base()
+    except Exception as e:
+        if no_failure:
+            return go.Figure()
+        raise e
+    else:
+        return fig
+
+
+def get_wiki_plot_base() -> go.Figure:
     client = MongoOPA(
         host="127.0.0.1",
         port=27017

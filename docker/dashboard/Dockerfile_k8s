@@ -1,0 +1,8 @@
+FROM opa:latest
+
+WORKDIR /code
+
+COPY ./config/config_k8s.ini /code/config/config.ini
+
+CMD ["python", "./src/plots/dashboard.py"]
+
