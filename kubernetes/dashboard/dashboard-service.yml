@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service # Create service
 metadata:
-  name: dashboard # Sets the service name
+  name: dashboard-service # Sets the service name
   labels:
     app: dashboard # Defines app to create service for
 spec:
