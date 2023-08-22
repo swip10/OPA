@@ -9,6 +9,9 @@ docker/mongodb/db/*
 # OPA postgres database
 docker/postgresql/postgres-db/*
 
+# build documentation
+docs/_build/*
+
 # pycharm 
 .idea
 
