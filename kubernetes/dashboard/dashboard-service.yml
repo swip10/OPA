@@ -8,7 +8,7 @@ spec:
   type: LoadBalancer # Sets the service type
   ports:
     - protocol: TCP
-      port: 8050 # Sets the port to run the postgres application
+      port: 8051 # Sets the port to run the postgres application
       targetPort: 8050
   selector:
     app: dashboard
