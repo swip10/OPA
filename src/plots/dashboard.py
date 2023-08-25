@@ -76,6 +76,9 @@ def load_default_csv_file(n_clicks):
     postgres_client = Postgres()
     postgres_client.initialize_with_historical_json(CHEMIN_JSON_LOCAL, reset=True)
     postgres_client.close()
+    global tickers, dropdown1_options
+    tickers = postgres.get_all_table_names()
+    dropdown1_options = [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
 
 
 # Page 2
