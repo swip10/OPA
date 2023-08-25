@@ -179,11 +179,11 @@ def sma():
     #        print(f"Le wallet {wallet} a {round(wallets[wallet], 2)}$ à la fin.")
 
     # Affichage des erreurs
-    res += f"Nombre ticker(s) pour lesquel la stratégie n'a pas pu être appliquée: " \
+    res += f"Nombre ticker(s) pour lesquel la stratégie n'a pas pu être appliquée : " \
            f"{len(ticker_impossible)}/ {len(table_names)} \n"
     res += f"Exemple de ticker(s) pour lesquel la stratégie n'a pas pu être appliquée: {ticker_impossible[:5]}"
     return res
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, host="127.0.0.1")
+    app.run_server(debug=True, host="0.0.0.0")

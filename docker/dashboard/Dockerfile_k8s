@@ -3,6 +3,7 @@ FROM opa:latest
 WORKDIR /code
 
 COPY ./config/config_k8s.ini /code/config/config.ini
+COPY ./data/ticker_data_hist.json /code/data/ticker_data_hist.json
 
 CMD ["python", "./src/plots/dashboard.py"]
 
