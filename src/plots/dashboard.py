@@ -67,18 +67,18 @@ def update_graph_1(ticker):
 
 
 @app.callback(
-    Output("placeholder", "children"),
+    Output("page-1-dropdown", "options"),
     Input('load_template', 'n_clicks'),
 )
 def load_default_csv_file(n_clicks):
     if n_clicks == 0:
-        return
+        global dropdown1_options
+        return dropdown1_options
     postgres_client = Postgres()
     postgres_client.initialize_with_historical_json(CHEMIN_JSON_LOCAL, reset=True)
+    tickers = postgres_client.get_all_table_names()
     postgres_client.close()
-    global tickers, dropdown1_options
-    tickers = postgres.get_all_table_names()
-    dropdown1_options = [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
+    return [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
 
 
 # Page 2
