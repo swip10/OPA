@@ -7,6 +7,7 @@ RUN pip install -r /code/requirements.txt
 COPY ./src /code/src
 COPY ./setup.py /code/setup.py
 COPY ./README.md /code/README.md
+COPY ./data /code/data
 RUN pip install -e /code/.
 # RUN python setup.py install
 

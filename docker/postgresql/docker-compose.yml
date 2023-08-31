@@ -7,22 +7,22 @@ services:
     container_name: postgres
     image: postgres:latest
     environment:
+      POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      PGDATA: /data/postgres
     volumes:
-       - postgres-db:/data/postgres
+       - ./postgres-db:/data/postgres
     ports:
       - "5432:5432"
     networks:
-      network1:
-        ipv4_address: 172.50.0.10
-
+      - network1
   adminer:
     image: adminer
 #    restart: always
     ports:
       - "8080:8080"
+    networks:
+      - network1
 
 networks:
   network1:
