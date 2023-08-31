@@ -39,8 +39,11 @@ except KeyError:
     twitterAccessTokenSecret = ""
     twitterBearerToken = ""
 
+
 config_sql = configparser.RawConfigParser()
-config_sql.read(Path(__file__).parents[1].absolute() / "config" / "config_sql.ini")
+with open(Path(__file__).parents[1].absolute() / "config" / "config_sql.ini") as stream:
+    config_sql.read_string("[SQL]\n" + stream.read())  # This line does the trick.
+
 host = config_sql['SQL']['POSTGRES_HOST']
 port = config_sql['SQL']["POSTGRES_PORT"]
 database = config_sql['SQL']["POSTGRES_DB"]
