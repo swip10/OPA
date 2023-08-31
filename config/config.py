@@ -12,11 +12,10 @@ EXTRACT_TICKERS = ['ETHBTC']
 # C'est ici que l'on récupère le chemin local du JSON de données hist
 CHEMIN_JSON_MACHINE = config['JSON']['CHEMIN_JSON_LOCAL']
 CHEMIN_JSON_IMAGE = config['JSON']['CHEMIN_JSON_IMAGE']
-if Path(CHEMIN_JSON_MACHINE).exists():
-    CHEMIN_JSON_LOCAL = CHEMIN_JSON_MACHINE
-else:
+if Path(CHEMIN_JSON_IMAGE).exists():
     CHEMIN_JSON_LOCAL = CHEMIN_JSON_IMAGE
-
+else:
+    CHEMIN_JSON_LOCAL = CHEMIN_JSON_MACHINE
 
 def get_tickers(client):
     tickers = client.get_symbol_ticker()
