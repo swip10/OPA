@@ -4,6 +4,7 @@ from pprint import pprint
 
 import pandas as pd
 
+from config import config
 from src.db.clientdb import DBClient
 from pymongo import MongoClient
 from src.utils.time import convert_ms_to_timestamp
@@ -21,8 +22,8 @@ class Collection(Enum):
 
 
 class MongoOPA(MongoClient, DBClient):
-    MongoClient.HOST = "127.0.0.1"
-    MongoClient.PORT = "27017"
+    MongoClient.HOST = config.mongodb_host
+    MongoClient.PORT = config.mongodb_port
 
     def __init__(
         self,

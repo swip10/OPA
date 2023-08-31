@@ -5,6 +5,7 @@ metadata:
   labels:
     app: postgres # Defines app to create service for
 spec:
+  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 5432 # Sets the port to run the postgres application

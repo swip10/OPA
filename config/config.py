@@ -42,10 +42,13 @@ except KeyError:
 
 config_sql = configparser.RawConfigParser()
 with open(Path(__file__).parents[1].absolute() / "config" / "config_sql.ini") as stream:
-    config_sql.read_string("[SQL]\n" + stream.read())  # This line does the trick.
+    config_sql.read_string("[SERVICES]\n" + stream.read())  # This line does the trick.
 
-host = config_sql['SQL']['POSTGRES_HOST']
-port = config_sql['SQL']["POSTGRES_PORT"]
-database = config_sql['SQL']["POSTGRES_DB"]
-db_user = config_sql['SQL']["POSTGRES_USER"]
-db_password = config_sql['SQL']["POSTGRES_PASSWORD"]
+host = config_sql['SERVICES']['POSTGRES_HOST']
+port = config_sql['SERVICES']["POSTGRES_PORT"]
+database = config_sql['SERVICES']["POSTGRES_DB"]
+db_user = config_sql['SERVICES']["POSTGRES_USER"]
+db_password = config_sql['SERVICES']["POSTGRES_PASSWORD"]
+
+mongodb_host = config_sql['SERVICES']['MONGODB_HOST']
+mongodb_port = int(config_sql['SERVICES']["MONGODB_PORT"])

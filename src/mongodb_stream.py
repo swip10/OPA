@@ -12,8 +12,8 @@ twm = ThreadedWebsocketManager()
 twm.start()
 
 client = MongoOPA(
-    host="127.0.0.1",
-    port=27017
+    host=config.mongodb_host,
+    port=config.mongodb_port
 )
 client.create_collections(reset=True)
 

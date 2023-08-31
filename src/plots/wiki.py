@@ -1,4 +1,5 @@
-from src.db.mongodb import MongoOPA, Collection
+from config import config
+from src.db.mongodb import MongoOPA
 import plotly.graph_objects as go
 import numpy as np
 
@@ -8,6 +9,7 @@ def get_wiki_plot(no_failure: bool = True) -> go.Figure:
         fig = get_wiki_plot_base()
     except Exception as e:
         if no_failure:
+            print(e)
             return go.Figure()
         raise e
     else:
@@ -16,8 +18,8 @@ def get_wiki_plot(no_failure: bool = True) -> go.Figure:
 
 def get_wiki_plot_base() -> go.Figure:
     client = MongoOPA(
-        host="127.0.0.1",
-        port=27017
+        host=config.mongodb_host,
+        port=config.mongodb_port
     )
 
     client.get_wiki_last_revision()

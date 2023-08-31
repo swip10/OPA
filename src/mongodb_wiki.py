@@ -2,13 +2,15 @@ import mwclient
 import time
 from tqdm import tqdm
 from transformers import pipeline
+
+from config import config
 from src.db.mongodb import MongoOPA
 # from src.db.mongodb import Collection
 
 # config pour selectioner le serveur et le port
 client = MongoOPA(
-    host="127.0.0.1",
-    port=27017
+    host=config.mongodb_host,
+    port=config.mongodb_port
 )
 
 # client.opa_db.drop_collection(str(Collection.WIKI))
