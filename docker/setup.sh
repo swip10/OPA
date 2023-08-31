@@ -94,7 +94,7 @@ Stop()
 # Process the input options. Add options as needed.                            #
 ################################################################################
 # Get the options
-while getopts ":abrsh:" option; do
+while getopts ":abnrsh:" option; do
    case $option in
       a) # display Help
          Build
