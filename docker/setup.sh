@@ -14,6 +14,7 @@ Help()
    echo "c     Stop containers and clean docker images"
    echo "b     Build OPA docker image."
    echo "h     Print this Help."
+   echo "n     Create network."
    echo "r     Run docker images"
    echo "s     Stop docker images"
    echo "v     Verbose mode."
@@ -30,17 +31,30 @@ Build()
     cd ..
     docker image build -t opa:latest -f docker/OPA/Dockerfile .
     docker image build -t opa/dashboard:latest -f docker/dashboard/Dockerfile .
-    docker image build -t opa/dashboard_k8s:latest -f docker/dashboard/Dockerfile_k8s .
     docker image build -t opa/fastapi:latest -f docker/fastAPI/Dockerfile .
     cd ./docker
 }
 
 
 ################################################################################
+# Network                                                                         #
+################################################################################
+Network()
+{
+    docker network create --subnet 172.50.0.0/16 --gateway 172.50.0.1 my_network
+}
+
+RemoveNetwork()
+{
+    docker network rm my_network
+}
+
+################################################################################
 # Run                                                                         #
 ################################################################################
 Run()
 {
+    Network
     cd ./mongodb
     docker-compose up -d 
     cd ./../postgresql
@@ -68,6 +82,7 @@ Stop()
     cd ./../fastAPI
     docker-compose down 
     cd ..
+    RemoveNetwork
 }
 
 ################################################################################
@@ -87,6 +102,9 @@ while getopts ":abrsh:" option; do
          exit;;
       b) # display Help
          Build
+         exit;;
+      n) # create network
+         Network
          exit;;
       r) # display Help
          Run

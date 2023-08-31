@@ -74,7 +74,7 @@ def update_graph_1(ticker):
 def load_default_csv_file(n_clicks):
     print("nombre de clicks", n_clicks)
     global dropdown1_options
-    if n_clicks == 0 or len(dropdown1_options) == 0:
+    if n_clicks == 0 or len(dropdown1_options) != 0:
         return dropdown1_options
     postgres_client = Postgres()
     postgres_client.initialize_with_historical_json(CHEMIN_JSON_LOCAL, reset=True)
