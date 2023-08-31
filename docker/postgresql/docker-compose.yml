@@ -6,20 +6,31 @@ services:
   postgres:
     container_name: postgres
     image: postgres:latest
+    env_file:
+      - ./../../config/config_sql.ini
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      PGDATA: /data/postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+#       POSTGRES_DB: postgres
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
     volumes:
-       - postgres-db:/data/postgres
+       - postgres-db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-
+    networks:
+      - network1
   adminer:
     image: adminer
 #    restart: always
     ports:
-      - 8080:8080
+      - "8080:8080"
+    networks:
+      - network1
+
+networks:
+  network1:
+    external: true
+    name: my_network
 
 volumes:
   postgres-db:

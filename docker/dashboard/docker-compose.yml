@@ -3,13 +3,15 @@ services:
   dash:
     image: opa/dashboard:latest
     container_name: opa_dash
-    network_mode: "host"
-#    networks:
-#      - network1
+    ports:
+      - "8050:8050"
+#    network_mode: "host"
+    networks:
+      - network1
 #    ports:
 #      - target: 8050
 #        published: 8050
-#networks:
-#  network1:
-#    external: true
-#    name: my_network
+networks:
+  network1:
+    external: true
+    name: my_network
