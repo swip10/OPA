@@ -1,5 +1,5 @@
 # OPA credential 
-config/config.ini
+config/*.ini
 data/ticker_data_hist_new.json
 data/*
 
