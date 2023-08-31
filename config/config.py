@@ -10,7 +10,13 @@ BINANCE_API_SECRET = config['API']['BINANCE_API_SECRET']
 EXTRACT_TICKERS = ['ETHBTC']
 
 # C'est ici que l'on récupère le chemin local du JSON de données hist
-CHEMIN_JSON_LOCAL = config['JSON']['CHEMIN_JSON']
+CHEMIN_JSON_MACHINE = config['JSON']['CHEMIN_JSON_LOCAL']
+CHEMIN_JSON_IMAGE = config['JSON']['CHEMIN_JSON']
+if Path(CHEMIN_JSON_MACHINE).exists():
+    CHEMIN_JSON_LOCAL = CHEMIN_JSON_MACHINE
+else:
+    CHEMIN_JSON_LOCAL = CHEMIN_JSON_IMAGE
+
 
 def get_tickers(client):
     tickers = client.get_symbol_ticker()
@@ -19,13 +25,6 @@ def get_tickers(client):
         if ticker not in tickers:
             raise KeyError(f"Ticker name {ticker} not available in Binance")
     return EXTRACT_TICKERS
-
-
-host = config['SQL']['host']
-port = config["SQL"]["port"]
-database = config["SQL"]["database"]
-db_user = config["SQL"]["db_user"]
-db_password = config["SQL"]["db_password"]
 
 try:
     twitterConsumerKey = config["TWITTER"].get("consumerKey", "")
@@ -39,3 +38,11 @@ except KeyError:
     twitterAccessToken = ""
     twitterAccessTokenSecret = ""
     twitterBearerToken = ""
+
+config_sql = configparser.RawConfigParser()
+config_sql.read(Path(__file__).parents[1].absolute() / "config" / "config_sql.ini")
+host = config_sql['SQL']['POSTGRES_HOST']
+port = config_sql['SQL']["POSTGRES_PORT"]
+database = config_sql['SQL']["POSTGRES_DB"]
+db_user = config_sql['SQL']["POSTGRES_USER"]
+db_password = config_sql['SQL']["POSTGRES_PASSWORD"]

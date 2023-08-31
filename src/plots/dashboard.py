@@ -17,6 +17,7 @@ postgres = Postgres()
 
 tickers = postgres.get_all_table_names()
 dropdown1_options = [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
+print(dropdown1_options)
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
@@ -71,14 +72,17 @@ def update_graph_1(ticker):
     Input('load_template', 'n_clicks'),
 )
 def load_default_csv_file(n_clicks):
-    if n_clicks == 0:
-        global dropdown1_options
+    print("nombre de clicks", n_clicks)
+    global dropdown1_options
+    if n_clicks == 0 or len(dropdown1_options) == 0:
         return dropdown1_options
     postgres_client = Postgres()
     postgres_client.initialize_with_historical_json(CHEMIN_JSON_LOCAL, reset=True)
     tickers = postgres_client.get_all_table_names()
     postgres_client.close()
-    return [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
+    new_list = [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
+    dropdown1_options = new_list
+    return dropdown1_options
 
 
 # Page 2
