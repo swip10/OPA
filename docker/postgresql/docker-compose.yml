@@ -14,12 +14,20 @@ services:
        - postgres-db:/data/postgres
     ports:
       - "5432:5432"
+    networks:
+      network1:
+        ipv4_address: 172.50.0.10
 
   adminer:
     image: adminer
 #    restart: always
     ports:
-      - 8080:8080
+      - "8080:8080"
+
+networks:
+  network1:
+    external: true
+    name: my_network
 
 volumes:
   postgres-db:
