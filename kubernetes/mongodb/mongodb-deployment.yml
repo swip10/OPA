@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment # Create a deployment
+kind: StatefulSet # Create a deployment
 metadata:
   name: mongodb # Set the name of the deployment
 spec:

@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment # Create a deployment
+kind: StatefulSet # Create a deployment
 metadata:
   name: postgres # Set the name of the deployment
 spec:
