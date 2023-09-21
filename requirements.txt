@@ -15,6 +15,7 @@ transformers
 mwclient
 numpy
 beautifulsoup4
+lxml
 statsmodels
 dash
 joblib

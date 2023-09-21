@@ -17,8 +17,9 @@ client = MongoOPA(
 endid = client.get_wiki_last_revision() + 1
 
 site = mwclient.Site("en.wikipedia.org")
-page = site.pages["Bitcoin"]
+page = site.pages["Cryptocurrency"]
 revs = list(page.revisions(endid=endid))
+print(revs)
 
 # sort the revisions by timestamp
 revs = sorted(revs, key=lambda revision: revision["timestamp"])

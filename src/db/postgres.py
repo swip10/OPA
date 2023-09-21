@@ -48,7 +48,8 @@ class Postgres(SQL):
                 capitalisation_boursiere VARCHAR(20),
                 volume_en_usd_24h VARCHAR(20),
                 actifs_circulants VARCHAR(20),
-                categorie VARCHAR(200)
+                categorie VARCHAR(200),
+                binance VARCHAR(20)
             );
         """
         try:
@@ -99,3 +100,4 @@ class Postgres(SQL):
         except (Exception, psycopg2.DatabaseError) as error:
             print("Error: %s" % error)
             self.connection.rollback()
+

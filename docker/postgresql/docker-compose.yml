@@ -6,15 +6,14 @@ services:
   postgres:
     container_name: postgres
     image: postgres:latest
+#    environment:
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#      POSTGRES_DB: ${POSTGRES_DB}
     env_file:
-      - ./../../config/config_sql.ini
-    environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
-#       POSTGRES_DB: postgres
-#       POSTGRES_USER: postgres
-#       POSTGRES_PASSWORD: postgres
+      - ./../../config/config_sql2.env
     volumes:
-       - postgres-db:/var/lib/postgresql/data
+      - ./postgres-db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
@@ -32,6 +31,6 @@ networks:
     external: true
     name: my_network
 
-volumes:
-  postgres-db:
-    driver: local
+#volumes:
+#  postgres-db:
+#    driver: local

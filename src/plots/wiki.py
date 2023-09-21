@@ -66,6 +66,23 @@ def get_wiki_plot_base() -> go.Figure:
     )
     return fig
 
+def get_wiki_plot_axis():
+    client = MongoOPA(
+        host=config.mongodb_host,
+        port=config.mongodb_port
+    )
+    client.get_wiki_last_revision()
+    df_sentiments = client.get_average_sentiment_over_time()
+    # Trouvez la date minimale (la plus ancienne) et la date maximale (la plus récente)
+    date_min = df_sentiments['timestamp'].min()
+    date_max = df_sentiments['timestamp'].max()
+
+    # Ajoutez '00:00:00' à la fin des dates
+    date_min = date_min + ' 00:00:00'
+    date_max = date_max + ' 00:00:00'
+    
+    return date_min, date_max
+
 
 if __name__ == "__main__":
     get_wiki_plot().show()
