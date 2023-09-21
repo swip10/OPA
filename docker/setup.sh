@@ -31,9 +31,10 @@ Build()
     cd ..
     docker image build -t opa:latest -f docker/OPA/Dockerfile .
     docker image build -t opa/dashboard:latest -f docker/dashboard/Dockerfile .
-    docker image build -t opa/dashboard_k8s:latest -f docker/dashboard/Dockerfile_k8s .
     docker image build -t opa/fastapi:latest -f docker/fastAPI/Dockerfile .
     cd ./docker
+    echo "removing <none> images "
+    docker rmi -f $(docker images -f "dangling=true" -q)
 }
 
 

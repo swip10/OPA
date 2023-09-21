@@ -1,11 +1,10 @@
 version: "3.9"
 services:
-  dash:
+  dash-service:
     image: opa/dashboard:latest
     container_name: opa_dash
     ports:
       - "8050:8050"
-#    network_mode: "host"
     networks:
       - network1
 #    ports:

@@ -38,6 +38,13 @@ to stop all processes use the following
 
 Deployment with kubernetes
 --------------------------
+If it is not the case yet, install k3s to run locally. Then docker option allows to pull local build images.
+
+.. code-block::
+
+   curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 --docker
+
+
 Go to kubernetes folder and launch all the services
 
 .. code-block:: bash
@@ -53,6 +60,15 @@ To stop all delete all the deployed services
    cd kubernetes
    kubeclt delete -f postgresql
    kubeclt delete -f dashboard
+
+Using Helm charts
+-----------------
+Add bitnami repository to install charts from it.
+
+.. code-block:: bash
+
+   helm repo add bitnami https://charts.bitnami.com/bitnami
+
 
 Indices and tables
 ==================

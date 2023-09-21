@@ -1,6 +1,6 @@
 version: "3.9"
 services:
-  fastapi:
+  fastapi-service:
     image: opa/fastapi:latest
     container_name: fastapi
     ports:

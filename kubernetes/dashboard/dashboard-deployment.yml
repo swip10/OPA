@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: dashboard
-        image: opa/dashboard_k8s:latest
+        image: opa/dashboard:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 8050

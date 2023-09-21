@@ -3,15 +3,11 @@ version: '3.5'
 
 
 services:
-  postgres:
+  postgres-service:
     container_name: postgres
     image: postgres:latest
-#    environment:
-#      POSTGRES_USER: ${POSTGRES_USER}
-#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-#      POSTGRES_DB: ${POSTGRES_DB}
     env_file:
-      - ./../../config/config_sql2.env
+      - ./../../config/config_sql.ini
     volumes:
       - ./postgres-db:/var/lib/postgresql/data
     ports:

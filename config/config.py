@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import configparser
 
@@ -16,6 +17,7 @@ if Path(CHEMIN_JSON_IMAGE).exists():
     CHEMIN_JSON_LOCAL = CHEMIN_JSON_IMAGE
 else:
     CHEMIN_JSON_LOCAL = CHEMIN_JSON_MACHINE
+
 
 def get_tickers(client):
     tickers = client.get_symbol_ticker()
@@ -43,11 +45,13 @@ config_sql = configparser.RawConfigParser()
 with open(Path(__file__).parents[1].absolute() / "config" / "config_sql.ini") as stream:
     config_sql.read_string("[SERVICES]\n" + stream.read())  # This line does the trick.
 
-host = config_sql['SERVICES']['POSTGRES_HOST']
+RUNNING_DOCKER = os.environ.get('AM_I_IN_A_DOCKER_CONTAINER', False)
+
+host = config_sql['SERVICES']['POSTGRES_HOST'] if RUNNING_DOCKER else config_sql['SERVICES']['POSTGRES_LOCAL']
 port = config_sql['SERVICES']["POSTGRES_PORT"]
 database = config_sql['SERVICES']["POSTGRES_DB"]
 db_user = config_sql['SERVICES']["POSTGRES_USER"]
 db_password = config_sql['SERVICES']["POSTGRES_PASSWORD"]
 
-mongodb_host = config_sql['SERVICES']['MONGODB_HOST']
+mongodb_host = config_sql['SERVICES']['MONGODB_HOST'] if RUNNING_DOCKER else config_sql['SERVICES']['MONGODB_LOCAL']
 mongodb_port = int(config_sql['SERVICES']["MONGODB_PORT"])
