@@ -2,9 +2,7 @@ from binance.client import Client
 from config import config
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-import joblib
-from keras.saving.saving_api import load_model
+import requests
 from pathlib import Path
 import plotly.graph_objects as go
 
@@ -31,31 +29,25 @@ data = pd.DataFrame(
 )
 data = data[["close", "volume"]]
 data = data.astype(float)
+json_data = {"price": list(data["close"][:59]), "volume": list(data["volume"][:59]), "currency": ticker}
 
-volume_scaler = joblib.load(the_script.parents[2] / "models" / "001_close_volume" / "scaler_volume.save")
-price_scaler = joblib.load(the_script.parents[2] / "models" / "001_close_volume" / "scaler_close_price.save")
+url = "http://127.0.0.1:8000/prediction"
 
-close = price_scaler.transform(data.close.values.reshape(-1, 1))
-volume = volume_scaler.transform(data.volume.values.reshape(-1, 1))
+headers = {
+    'accept': 'application/json',
+    'Content-Type': 'application/json',
+}
 
-x = np.array([close, volume]).T
-xx = tf.convert_to_tensor(x, np.float32)
-x = xx 
-model = load_model(the_script.parents[2] / "models" / "001_close_volume" / "keras_next")
+params = {
+    'next_hours': str(NUMBER_OF_PREDICTIONS*8),
+}
 
-predictions = []
-for i in range(NUMBER_OF_PREDICTIONS):
-    if TESTING:
-        x = xx[:, i:i+59, :]
-    y = model.predict(x)[0]
-    if not TESTING:
-        x = tf.concat([x[:, 1:, :], [[[y[0], y[1]]]]], axis=1)
-    predictions.append(y)
-predictions = np.array(predictions)
+r = requests.post(url, params=params, headers=headers, json=json_data)
+response = r.json()
 
 if PLOT:
     x_true = np.arange(len(data["close"]))
-    y_pred = price_scaler.inverse_transform(predictions.T[0].reshape(-1, 1)).reshape(NUMBER_OF_PREDICTIONS)
+    y_pred = response["prices"]
     x_pred = np.arange(59, 59 + NUMBER_OF_PREDICTIONS)
     fig = go.Figure(
         go.Scatter(x=x_true, y=data["close"], mode='lines+markers')

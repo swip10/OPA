@@ -39,5 +39,5 @@ def test_get_model_api_prediction(json_data, next_hours):
         assert r.status_code == 204
     else:
         response = r.json()
-        assert isinstance(response["price"], float)
-        assert isinstance(response["volume"], float)
+        assert isinstance(response["prices"][0], float)
+        assert isinstance(response["volumes"][0], float)
