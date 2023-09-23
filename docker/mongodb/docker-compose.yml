@@ -1,4 +1,5 @@
-version: "3.3"
+version: "3.5"
+
 services:
   mongodb-service:
     image : mongo:5.0
@@ -7,3 +8,10 @@ services:
     - ./db:/data/db
     ports:
     - "27017:27017"
+    networks:
+      - network1
+
+networks:
+  network1:
+    external: true
+    name: my_network
