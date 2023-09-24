@@ -55,3 +55,6 @@ db_password = config_sql['SERVICES']["POSTGRES_PASSWORD"]
 
 mongodb_host = config_sql['SERVICES']['MONGODB_HOST'] if RUNNING_DOCKER else config_sql['SERVICES']['MONGODB_LOCAL']
 mongodb_port = int(config_sql['SERVICES']["MONGODB_PORT"])
+
+fastapi_host = "fastapi-service" if RUNNING_DOCKER else "127.0.0.1"
+fastapi_port = 8000

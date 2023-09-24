@@ -61,10 +61,10 @@ Run()
     docker-compose up -d 
     cd ./../postgresql
     docker-compose up -d 
-       cd ./../fastAPI
+    cd ./../fastAPI
     docker-compose up -d 
 
- # Attendre que le conteneur "postgres" soit prêt
+    # Attendre que le conteneur "postgres" soit prêt
     echo "Waiting for postgres to be ready..."
     until docker exec postgres pg_isready -h localhost -p 5432 -q; do
         sleep 1

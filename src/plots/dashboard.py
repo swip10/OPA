@@ -1,11 +1,16 @@
 # Importation des bibliothèques nécessaires
+from binance.client import Client
+from config import config
 from dash import Dash, html, dcc, dash_table
 import plotly.graph_objects as go
 from dash.dependencies import Output, Input
 from src.db.postgres import Postgres
 from src.plots.wiki import get_wiki_plot
 from config.config import CHEMIN_JSON_LOCAL
+import requests
 import plotly.express as px
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from src.volatility_script import run_volatility_script
 from src.plots.wiki import get_wiki_plot_axis
@@ -43,6 +48,8 @@ index_page = html.Div([
     html.Br(),
     html.Button(dcc.Link('Run Volatility Script', href='/page-4')),
     html.Br(),
+    html.Button(dcc.Link('Predict next stock market prices', href='/page-5')),
+    html.Br(),
 ], style={'alignItems': 'center'})
 
 # Page 1 : Affiche les prix historiques à partir de PostgreSQL
@@ -64,6 +71,7 @@ layout_1 = html.Div([
     html.Button(dcc.Link('Go back to home page', href='/'))
 ], style={'background': 'beige'})
 
+
 # Callback pour mettre à jour le graphique en fonction de la sélection de la devise
 @app.callback(Output(component_id='page-1-graph', component_property='figure'),
               [Input(component_id='page-1-dropdown', component_property='value')])
@@ -73,6 +81,7 @@ def update_graph_1(ticker):
     df = Postgres().get_table_as_dataframe(ticker)
     fig = px.line(df, x="timestamp", y="close")
     return fig
+
 
 # Callback pour charger un fichier CSV par défaut
 @app.callback(
@@ -107,6 +116,7 @@ layout_2 = html.Div([
     html.Button(dcc.Link('Go back to home page', href='/'))
 ], style={'background': 'beige'})
 
+
 # Callback pour effectuer le calcul lorsque le bouton "Compute" est cliqué
 @app.callback(
     Output(component_id='page2-output', component_property='children'),
@@ -116,7 +126,6 @@ def input_triggers_spinner(n_clicks):
     if n_clicks > 0:
         message = sma()
         return "", message
-
 
 
 def get_btc_plot(no_failure: bool = True) -> go.Figure:
@@ -132,15 +141,17 @@ def get_btc_plot(no_failure: bool = True) -> go.Figure:
     else:
         return fig
 
+
 # Fonction pour filtrer les données du BTC en fonction de l'axe des x du graphique 1
 def filter_btc_data_by_x_range(no_failure: bool = True) -> go.Figure:
-    df_btc = Postgres().get_table_as_dataframe('btcusdt')
+    df_btc = Postgres().get_table_as_dataframe('BNTETH')
     # Accédez à la plage des axes X
     xaxis_range = get_wiki_plot_axis()
     # Filtrer avec les dates sur l'axe du cours BTC
     df_btc_filtered = df_btc[(df_btc['timestamp'] >= xaxis_range[0]) & (df_btc['timestamp'] <= xaxis_range[1])]
     fig = px.line(df_btc_filtered, x="timestamp", y="close")
     return fig
+
 
 # Page 3 : Analyse du sentiment à partir de MongoDB
 layout_3 = html.Div([
@@ -151,7 +162,6 @@ layout_3 = html.Div([
     html.Br(),
     html.Button(dcc.Link('Go back to home page', href='/'))
 ], style={'background': 'beige'})
-
 
 # Page 4 : Affichage du dataframe 'VOLATILITE'
 layout_4 = html.Div([
@@ -169,6 +179,19 @@ layout_4 = html.Div([
     html.Button(dcc.Link('Go back to home page', href='/'))
 ], style={'background': 'beige'})
 
+layout_5 = html.Div([
+    html.H1('Predict next stock market prices',
+            style={'textAlign': 'center', 'color': 'mediumturquoise'}),
+    html.H4('It will download the 59 last close market price spaced by 8 hours and '
+            'run a model prediction for future values'),
+    html.Button(dcc.Link('Go back to home page', href='/')),
+    html.Button('Compute', id='loading-input-5', n_clicks=0),
+    html.Div(dcc.Graph(id='page-5-graph1', figure=go.Figure())),
+    html.Br(),
+    html.Button(dcc.Link('Go back to home page', href='/'))
+], style={'background': 'beige'})
+
+
 # Mise à jour de l'index en fonction de l'URL
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
@@ -181,6 +204,8 @@ def display_page(pathname):
         return layout_3
     elif pathname == '/page-4':
         return layout_4
+    elif pathname == '/page-5':
+        return layout_5
     else:
         # Affichez le nombre de tables sur la page d'accueil
         table_count = get_table_count()
@@ -195,23 +220,96 @@ def display_page(pathname):
             html.Br(),
             html.Button(dcc.Link('Run Volatility Script', href='/page-4')),
             html.Br(),
+            html.Button(dcc.Link('Predict next stock market prices', href='/page-5')),
+            html.Br(),
         ], style={'alignItems': 'center'})
 
+
 # Callback pour effectuer l'update lorsque le bouton "Compute" est cliqué
+@app.callback(
+    Output(component_id='page-5-graph1', component_property='figure'),
+    Input(component_id="loading-input-5", component_property="n_clicks"),
+)
+def update_prediction_stock_market_price_figure(n_clicks: int) -> go.Figure:
+    """
+    triggered after clicking 'compute' button
+    :param n_clicks: (int) number of clicks
+    :return: (go.Figure)
+    """
+    print(n_clicks)
+    if n_clicks > 0:
+        TESTING = True
+        NUMBER_OF_PREDICTIONS = 5
+
+        ticker = "ETHBTC"  # model has been trained with this ticker
+
+        client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
+        client.ping()
+
+        nb_samples = 8 * 59  # 59 values spaced by 8 jours
+        nb_samples += NUMBER_OF_PREDICTIONS * 8 if TESTING is True else 0  # keep true value to compare in testing mode
+        klines = client.get_historical_klines(ticker, Client.KLINE_INTERVAL_8HOUR, f"{nb_samples} hours ago")
+        data = pd.DataFrame(
+            klines,
+            columns=[
+                "timestamp", "open", "high", "low", "close", "volume", "close_time", "quote_asset_volume",
+                "number_of_trades",
+                "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", "ignore"
+            ]
+        )
+        data = data[["close", "volume"]]
+        data = data.astype(float)
+        json_data = {"price": list(data["close"][:59]), "volume": list(data["volume"][:59]), "currency": ticker}
+
+        url = f"http://{config.fastapi_host}:{config.fastapi_port}/prediction"
+
+        headers = {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+
+        params = {
+            'next_hours': str(NUMBER_OF_PREDICTIONS * 8),
+        }
+
+        r = requests.post(url, params=params, headers=headers, json=json_data)
+
+        response = r.json()
+        x_true = np.arange(len(data["close"]))
+        y_pred = response["prices"]
+        x_pred = np.arange(59, 59 + NUMBER_OF_PREDICTIONS)
+        fig = go.Figure(
+            go.Scatter(x=x_true, y=data["close"], mode='lines+markers')
+        )
+        fig.add_trace(
+            go.Scatter(x=x_pred, y=y_pred, mode='markers')
+        )
+        return fig
+    else:
+        return go.Figure()
+
+
 @app.callback(
     Output(component_id='page4-output', component_property='children'),
     Input(component_id="loading-input-4", component_property="n_clicks"),
 )
-def input_triggers_spinner(n_clicks):
+def input_triggers_spinner(n_clicks: int) -> dash_table.DataTable:
+    """
+    triggered after clicking 'compute' button
+    :param n_clicks: (int) number of clicks
+    :return: (DataTable)
+    """
     if n_clicks > 0:
         tableau_volat = run_volatility_script()
         return dash_table.DataTable(tableau_volat.to_dict('records'), [{"name": i, "id": i} for i in tableau_volat.columns])
     else:
-        return ""  # Afficher le contenu initial vide lorsque le bouton n'est pas encore cliqué
+        return dash_table.DataTable()
 
-
-# Fonction pour calculer la meilleure devise à trader
-def sma():
+def sma() -> str:
+    """
+    Fonction pour calculer la meilleure devise à trader
+    :return: message: (str)
+    """
     postgres = Postgres()
     table_names = postgres.get_all_table_names()
     table_names = ['btcusdt', 'subbtc', 'ltceur']  # Exemple de devises à analyser
@@ -251,16 +349,17 @@ def sma():
     res += f"Exemple de devise(s) pour lesquelles la stratégie n'a pas pu être appliquée: {ticker_impossible[:5]}"
     return res
 
-# Fonction pour obtenir le nombre de tables dans la base de données
-def get_table_count():
+
+def get_table_count() -> int:
+    """ Fonction pour obtenir le nombre de tables dans la base de données
+    :return: count(int): number of tables
+    """
     postgres = Postgres()
     table_names = postgres.get_all_table_names()
     postgres.close()
     return len(table_names)
 
 
-
-# Lancement de l'application Dash
 if __name__ == '__main__':
     app.run_server(debug=True, host="0.0.0.0")
 

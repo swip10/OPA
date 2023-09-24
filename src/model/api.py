@@ -1,15 +1,15 @@
 import joblib
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from pydantic import BaseModel
 from typing import Optional, List
 from fastapi import FastAPI
-from fastapi import Depends, HTTPException, status, Query
+from fastapi import HTTPException, status
 from keras.saving.saving_api import load_model
 from pathlib import Path
-from collections import namedtuple
 from src.db.postgres import Postgres
-from datetime import datetime
+
 
 api = FastAPI(title="Price predictor",
               description="Predict the price for a currency as well as its volume powered by FastAPI.",
@@ -52,7 +52,7 @@ def post_prediction(item: History, next_hours: int = 8) -> Predictions:
 
     close = price_scaler.transform(x[:, 0].reshape(-1, 1))
     volume = volume_scaler.transform(x[:, 1].reshape(-1, 1))
-    # x = np.expand_dims(x, axis=0)  # shape should be (1, 59, 2) because predicting one batch at a time
+
     x = np.array([close, volume]).T
     x = tf.convert_to_tensor(x, np.float32)
     predictions = []
@@ -73,13 +73,18 @@ def get_currency():
         'currency': "ETHBTC"
     }
 
-#on établi une connexion à la BDD Postgres
+
+# on établi une connexion à la BDD Postgres
 database = Postgres()
 
-#méthode pour récupérer le dataframe d'un ticker spécifique via la bdd postgres
 
 @api.get('/dfcurrency/{ticker}', name='Get Currency DataFrame')
 def get_currency_dataframe(ticker: str):
+    """
+    return all candle sticks values for a given currency
+    :param ticker: ticker's name
+    :return: DataFrame
+    """
     try:
         # On récupère la liste des noms de tables (tickers) disponibles dans la base de données
         available_tickers = database.get_all_table_names()
@@ -98,7 +103,6 @@ def get_currency_dataframe(ticker: str):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"DataFrame is empty for {ticker}."
             )
-
         
         return f'{ticker} dataframe retrieved !'
 

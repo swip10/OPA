@@ -12,7 +12,6 @@ TESTING = True
 NUMBER_OF_PREDICTIONS = 5
 
 ticker = "ETHBTC"  # model has been trained with this ticker
-the_script = Path(__file__)
 
 client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
 client.ping()
