@@ -100,15 +100,7 @@ def get_currency_dataframe(ticker: str):
             )
 
         
-        df['timestamp'] = df['timestamp'].astype(int)
-
-        # Récupère les X dernières lignes du DataFrame
-        df_tail = df.tail(60)
-
-        # Transforme la colonne 'timestamp' en format lisible (timestamp UNIX en date)
-        df_tail['timestamp'] = df_tail['timestamp'].apply(lambda x: datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
-
-        return df_tail
+        return f'{ticker} dataframe retrieved !'
 
     except Exception as e:
         raise HTTPException(
