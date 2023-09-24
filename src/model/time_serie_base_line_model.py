@@ -2,6 +2,8 @@ from tensorflow import keras
 from keras.layers import Bidirectional, Dropout, Activation, Dense, LSTM, Lambda, concatenate
 from keras.layers import CuDNNLSTM
 from keras.models import Model
+from tensorflow import keras
+from keras.layers import Bidirectional, Dropout, LSTM, Dense
 
 # extracted from https://medium.com/codex/time-series-prediction-using-lstm-in-python-19b1187f580f
 
@@ -62,3 +64,6 @@ class TimeSerieTwoBranchesModel(Model):
         x = self.lstm3(x)
         x = concatenate([x, x2])
         return self.dense1(x)
+
+
+

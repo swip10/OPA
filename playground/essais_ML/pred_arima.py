@@ -1,13 +1,15 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from src.db.postgres import Postgres
-from tqdm import tqdm
-from sklearn.svm import SVR
-from sklearn.preprocessing import StandardScaler
+from tqdm import tqdm 
+import sys
+import warnings
 
 # Rediriger les avertissements et les messages de fréquence inconnue vers stderr
-import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -29,38 +31,47 @@ df_LM = df_LM.sort_values(by='timestamp')
 # Définir l'index du DataFrame comme la colonne 'timestamp'
 df_LM.set_index('timestamp', inplace=True)
 
+# Vérifier si la série temporelle est stationnaire (test de Dickey-Fuller)
+result = adfuller(df_LM['close'])
+print('Test de Dickey-Fuller:')
+print(f'Statistic: {result[0]}')
+print(f'p-value: {result[1]}')
+print(f'Critial Values:')
+for key, value in result[4].items():
+    print(f'   {key}: {value}')
+
+# Si la série n'est pas stationnaire, effectuer une différenciation pour la rendre stationnaire
+if result[1] > 0.05:
+    df_LM_diff = df_LM['close'].diff().dropna()
+else:
+    df_LM_diff = df_LM['close']
+
+# Tracer les autocorrélations et autocorrélations partielles pour déterminer les ordres AR et MA
+#fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 6))
+#plot_acf(df_LM_diff, lags=40, ax=ax1)
+#plot_pacf(df_LM_diff, lags=40, ax=ax2)
+#plt.show()
+
 # Initialisation des prédictions
 forecast_steps = 90
 forecast = []
 
 # Prédire les 90 prochains intervalles de 8 heures (30 jours)
 for i in tqdm(range(forecast_steps), desc="Prédiction en cours"):
-    # Entraîner un modèle SVR à chaque itération
-    model = SVR(kernel='rbf', C=1.0, epsilon=0.2)
+    # Entraîner un modèle ARIMA à chaque itération
+    order = (3, 1, 3)  # Utilisation de p=3 et q=3
+    model = sm.tsa.ARIMA(df_LM['close'], order=order)
+    results = model.fit()
     
-    # Préparer les données d'entraînement
-    X_train = np.arange(len(df_LM)).reshape(-1, 1)
-    y_train = df_LM['close']
-    
-    # Normaliser les données d'entraînement
-    scaler_X = StandardScaler()
-    scaler_y = StandardScaler()
-    X_train = scaler_X.fit_transform(X_train)
-    y_train = scaler_y.fit_transform(y_train.values.reshape(-1, 1))
-    
-    # Adapter le modèle aux données d'entraînement
-    model.fit(X_train, y_train.ravel())
-    
-    # Prédire pour le prochain intervalle de 8 heures
-    next_X = np.array([[len(df_LM)]])
-    next_X = scaler_X.transform(next_X)
-    next_forecast = scaler_y.inverse_transform(model.predict(next_X).reshape(-1, 1))[0][0]
+    # Faire une prédiction
+    next_forecast = results.forecast(steps=1, alpha=0.05)[0]
     
     # Ajouter la prédiction à la liste
     forecast.append(next_forecast)
     
     # Mettre à jour les données d'entraînement avec la dernière prédiction
     df_LM.loc[df_LM.index[-1] + pd.Timedelta(hours=8)] = next_forecast
+    df_LM_diff = df_LM['close'].diff().dropna()
 
 # Créer une nouvelle colonne 'predictions' dans le DataFrame et y stocker les prédictions
 df_LM['predictions'] = np.nan
@@ -78,7 +89,7 @@ df_combined = pd.concat([df_LM, df_predictions])
 plt.figure(figsize=(12, 6))
 plt.plot(df_combined.index, df_combined['close'], label='Cours passé', linewidth=2)
 plt.plot(df_combined.index, df_combined['predictions'], color='red', label='Prédictions')
-plt.title('Prédictions du cours du Bitcoin avec SVR')
+plt.title('Prédictions du cours du Bitcoin avec ARIMA')
 plt.xlabel('Date')
 plt.ylabel('Prix du Bitcoin')
 plt.legend()

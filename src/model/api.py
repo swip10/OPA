@@ -4,11 +4,12 @@ import tensorflow as tf
 from pydantic import BaseModel
 from typing import Optional, List
 from fastapi import FastAPI
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from keras.saving.saving_api import load_model
 from pathlib import Path
 from collections import namedtuple
-
+from src.db.postgres import Postgres
+from datetime import datetime
 
 api = FastAPI(title="Price predictor",
               description="Predict the price for a currency as well as its volume powered by FastAPI.",
@@ -72,3 +73,45 @@ def get_currency():
         'currency': "ETHBTC"
     }
 
+#on établi une connexion à la BDD Postgres
+database = Postgres()
+
+#méthode pour récupérer le dataframe d'un ticker spécifique via la bdd postgres
+
+@api.get('/dfcurrency/{ticker}', name='Get Currency DataFrame')
+def get_currency_dataframe(ticker: str):
+    try:
+        # On récupère la liste des noms de tables (tickers) disponibles dans la base de données
+        available_tickers = database.get_all_table_names()
+        
+        # On vérifie si le ticker demandé est bien dans la liste
+        if ticker not in [item[0] for item in available_tickers]:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"DataFrame not found for {ticker}. Ticker not found in the database."
+            )
+
+        df = database.get_table_as_dataframe(ticker)
+
+        if df.empty:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"DataFrame is empty for {ticker}."
+            )
+
+        
+        df['timestamp'] = df['timestamp'].astype(int)
+
+        # Récupère les X dernières lignes du DataFrame
+        df_tail = df.tail(60)
+
+        # Transforme la colonne 'timestamp' en format lisible (timestamp UNIX en date)
+        df_tail['timestamp'] = df_tail['timestamp'].apply(lambda x: datetime.utcfromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
+
+        return df_tail
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )

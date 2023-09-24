@@ -5,9 +5,10 @@ from src.db.postgres import Postgres
 from tqdm import tqdm
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
+import sys
+import warnings
 
 # Rediriger les avertissements et les messages de fréquence inconnue vers stderr
-import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -33,7 +34,11 @@ df_LM.set_index('timestamp', inplace=True)
 forecast_steps = 90
 forecast = []
 
-# Prédire les 90 prochains intervalles de 8 heures (30 jours)
+# Avant la boucle de prédiction, rediriger la sortie standard vers un fichier
+original_stdout = sys.stdout  # Sauvegarder la sortie standard actuelle
+sys.stdout = open('output.log', 'w')  # Rediriger la sortie vers un fichier
+
+# Boucle de prédiction
 for i in tqdm(range(forecast_steps), desc="Prédiction en cours"):
     # Entraîner un modèle SVR à chaque itération
     model = SVR(kernel='rbf', C=1.0, epsilon=0.2)
@@ -61,6 +66,10 @@ for i in tqdm(range(forecast_steps), desc="Prédiction en cours"):
     
     # Mettre à jour les données d'entraînement avec la dernière prédiction
     df_LM.loc[df_LM.index[-1] + pd.Timedelta(hours=8)] = next_forecast
+
+# Après la boucle de prédiction, rétablir la sortie standard
+sys.stdout.close()
+sys.stdout = original_stdout  # Rétablir la sortie standard
 
 # Créer une nouvelle colonne 'predictions' dans le DataFrame et y stocker les prédictions
 df_LM['predictions'] = np.nan
