@@ -144,12 +144,17 @@ def get_btc_plot(no_failure: bool = True) -> go.Figure:
 
 # Fonction pour filtrer les données du BTC en fonction de l'axe des x du graphique 1
 def filter_btc_data_by_x_range(no_failure: bool = True) -> go.Figure:
-    df_btc = Postgres().get_table_as_dataframe('BNTETH')
-    # Accédez à la plage des axes X
-    xaxis_range = get_wiki_plot_axis()
-    # Filtrer avec les dates sur l'axe du cours BTC
-    df_btc_filtered = df_btc[(df_btc['timestamp'] >= xaxis_range[0]) & (df_btc['timestamp'] <= xaxis_range[1])]
-    fig = px.line(df_btc_filtered, x="timestamp", y="close")
+    try:
+        df_btc = Postgres().get_table_as_dataframe('ETHBTC')
+        # Accédez à la plage des axes X
+        xaxis_range = get_wiki_plot_axis()
+        # Filtrer avec les dates sur l'axe du cours BTC
+        df_btc_filtered = df_btc[(df_btc['timestamp'] >= xaxis_range[0]) & (df_btc['timestamp'] <= xaxis_range[1])]
+        fig = px.line(df_btc_filtered, x="timestamp", y="close")
+    except Exception as e:
+        if no_failure is False:
+            raise e
+        fig = go.Figure()
     return fig
 
 

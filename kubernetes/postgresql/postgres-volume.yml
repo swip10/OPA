@@ -10,7 +10,7 @@ spec:
   capacity:
     storage: 10Gi # Sets PV's size
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   hostPath:
-    path: /home/loic/Documents/Dev/OPA/docker/postgresql/postgres-db # Sets PV's host path
-    type: Directory
+    path: "/home/loic/Documents/Dev/OPA/docker/postgresql/postgres-db"
+    type: DirectoryOrCreate
