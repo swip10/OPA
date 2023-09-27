@@ -26,3 +26,4 @@ requests
 uvicorn
 sphinx
 sphinx-rtd-theme
+dash-bootstrap-components

@@ -16,7 +16,7 @@ ticker = "ETHBTC"  # model has been trained with this ticker
 client = Client(config.BINANCE_API_KEY, config.BINANCE_API_SECRET)
 client.ping()
 
-nb_samples = 8 * 59  # 59 values spaced by 8 jours
+nb_samples = 8 * 59  # 59 values spaced by 8 hours
 nb_samples += NUMBER_OF_PREDICTIONS*8 if TESTING is True else 0  # keep true value to compare in testing mode
 klines = client.get_historical_klines(ticker, Client.KLINE_INTERVAL_8HOUR, f"{nb_samples} hours ago")
 data = pd.DataFrame(

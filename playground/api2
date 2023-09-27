@@ -1,0 +1,123 @@
+import joblib
+import numpy as np
+import tensorflow as tf
+from pydantic import BaseModel
+from typing import Optional, List
+from fastapi import FastAPI, HTTPException, status, Query
+from keras.saving.saving_api import load_model
+from pathlib import Path
+from src.db.postgres import Postgres
+from datetime import datetime
+
+api = FastAPI(title="Price predictor",
+              description="Predict the price for a currency as well as its volume powered by FastAPI.",
+              version="0.0.1")
+
+the_script = Path(__file__)
+model = load_model(the_script.parents[2] / "models" / "001_close_volume" / "keras_next")
+volume_scaler = joblib.load(the_script.parents[2] / "models" / "001_close_volume" / "scaler_volume.save")
+price_scaler = joblib.load(the_script.parents[2] / "models" / "001_close_volume" / "scaler_close_price.save")
+
+class History(BaseModel):
+    price: List[float]
+    volume: List[float]
+    currency: Optional[str] = None
+
+class Predictions(BaseModel):
+    prices: List[float]
+    volumes: List[float]
+
+# Méthode pour récupérer le DataFrame d'un ticker spécifique via la BDD Postgres
+@api.get('/dfcurrency/{ticker}', name='Get Currency DataFrame')
+def get_currency_dataframe(ticker: str):
+    try:
+        # On établit une connexion à la BDD Postgres
+        database = Postgres()
+
+        # On récupère la liste des noms de tables (tickers) disponibles dans la base de données
+        available_tickers = database.get_all_table_names()
+        
+        # On vérifie si le ticker demandé est bien dans la liste
+        if ticker not in [item[0] for item in available_tickers]:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"DataFrame not found for {ticker}. Ticker not found in the database."
+            )
+
+        df = database.get_table_as_dataframe(ticker)
+
+        if df.empty:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"DataFrame is empty for {ticker}."
+            )
+
+        return f'{ticker} dataframe retrieved !'
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+# Méthode pour effectuer la prédiction
+@api.post('/prediction', name='Prediction of the next price in x numbers of hours')
+def post_prediction(ticker: str, next_hours: int = 8) -> Predictions:
+    """Return the predicted price in the next number of hours
+    """
+    try:
+        # Obtenez le DataFrame du ticker
+        df = get_currency_dataframe(ticker)
+
+        # Vérifiez si le DataFrame contient les colonnes 'close' et 'volume'
+        if 'close' not in df.columns or 'volume' not in df.columns:
+            raise HTTPException(
+                status_code=status.HTTP_204_NO_CONTENT,
+                detail="DataFrame does not contain 'close' and 'volume' columns."
+            )
+
+        # Récupérez les colonnes 'close' et 'volume' du DataFrame
+        close_prices = df['close'].tolist()
+        volume_data = df['volume'].tolist()
+
+        # Assurez-vous que les données ont la longueur requise (59 points)
+        if len(close_prices) != 59 or len(volume_data) != 59:
+            raise HTTPException(
+                status_code=status.HTTP_204_NO_CONTENT,
+                detail="price and volume history have not the correct length - required to be 59"
+            )
+
+        # Effectuez la prédiction en utilisant close_prices et volume_data
+        x = np.array([close_prices, volume_data]).T
+        close = price_scaler.transform(x[:, 0].reshape(-1, 1))
+        volume = volume_scaler.transform(x[:, 1].reshape(-1, 1))
+        x = np.array([close, volume]).T
+        x = tf.convert_to_tensor(x, np.float32)
+        predictions = []
+        for i in range(0, next_hours):
+            y = model.predict(x)[0]
+            # remove first value and add the prediction before redoing the model's prediction
+            x = tf.concat([x[:, 1:, :], [[[y[0], y[1]]]]], axis=1)
+            predictions.append(y)
+        predictions = np.array(predictions)
+        prices = price_scaler.inverse_transform(predictions.T[0].reshape(-1, 1)).reshape(next_hours)
+        volumes = volume_scaler.inverse_transform(predictions.T[0].reshape(-1, 1)).reshape(next_hours)
+
+        return Predictions(prices=prices, volumes=volumes)
+
+    except HTTPException as e:
+        # Gérez les erreurs HTTPException ici
+        raise e
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+# Méthode pour obtenir le modèle de devise
+@api.get('/currency', name='Get model currency')
+def get_currency():
+    return {
+        'currency': "ETHBTC"
+    }
