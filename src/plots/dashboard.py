@@ -1,8 +1,17 @@
 # Importation des bibliothèques nécessaires
+# Bibliothèques
+import json
+import joblib
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from src.model.time_serie_base_line_model import TimeSerieBaseLineModel
+from config import config
+from src.db.postgres import Postgres
 import dash
 import dash_bootstrap_components as dbc
 from binance.client import Client
-from config import config
 from dash import Dash, html, dcc, dash_table
 import plotly.graph_objects as go
 from dash.dependencies import Output, Input, State
@@ -11,11 +20,12 @@ from src.plots.wiki import get_wiki_plot
 from config.config import CHEMIN_JSON_LOCAL
 import requests
 import plotly.express as px
-import numpy as np
-import pandas as pd
 from tqdm import tqdm
 from src.volatility_script import run_volatility_script
 from src.plots.wiki import get_wiki_plot_axis
+import time
+# Votre code commence ici
+
 
 app = dash.Dash(external_stylesheets=[dbc.themes.CERULEAN], suppress_callback_exceptions=True)
 
@@ -39,25 +49,26 @@ CONTENT_STYLE = {
 # Barre de navigation avec brand à gauche et barre de recherche à droite
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Home", href="/")),
-        dbc.NavItem(dbc.NavLink("Historical prices", href="/page-1")),
-        dbc.NavItem(dbc.NavLink("Best currency to trade", href="/page-2")),
-        dbc.NavItem(dbc.NavLink("Sentiment analysis", href="/page-3")),
-        dbc.NavItem(dbc.NavLink("Crypto Volatility", href="/page-4")),
-        dbc.NavItem(dbc.NavLink("Stock market prediction", href="/page-5")),
+        dbc.NavItem(dbc.NavLink("Home", href="/", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Historical prices", href="/page-1", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Best currency to trade", href="/page-2", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Sentiment analysis", href="/page-3", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Crypto Volatility", href="/page-4", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Stock market prediction", href="/page-5", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Machine Learning", href="/page-6", className="text-center")),
         dbc.Form(
             dbc.Input(type="search", placeholder="Search"),
-            className="d-flex ms-auto",  
+            className="d-flex ms-auto",
         ),
         dbc.Button("Search", color="secondary", className="ms-2"),
     ],
-    brand="OPA dashboard",  
+    brand="OPA dashboard",
     brand_href="#",
     color="primary",
     dark=True,
-    brand_style={"margin-left": "10px"},  
-    
+    brand_style={"margin-left": "5px"},
 )
+
 
 # Initialisation de la connexion à PostgreSQL
 postgres = Postgres()
@@ -71,15 +82,6 @@ content = html.Div(id="page-content", style=CONTENT_STYLE)
 
 app.layout = html.Div([dcc.Location(id="url"),  content])
 
-'''# Configuration de l'application Dash
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
-
-# Configuration de la mise en page de l'application
-app.layout = html.Div([
-    dcc.Location(id='url', refresh=False),
-    html.Div(id='page-content')
-])'''
 
 # Organisation de la page d'accueil
 index_page = html.Div(
@@ -101,24 +103,6 @@ index_page = html.Div(
 )
 
 
-'''# Page d'accueil
-index_page = html.Div([
-    html.H1('OPA dashboard', style={'color': 'aquamarine', 'textAlign': 'center'}),
-    
-    # Ajoutez cette section pour afficher le nombre de tables
-    html.Div(id='table-count', style={'textAlign': 'center', 'marginBottom': '20px'}),
-    
-    html.Button(dcc.Link('Historical prices from PostGres DB', href='/page-1')),
-    html.Br(),
-    html.Button(dcc.Link('Find best currency to trade from moving average', href='/page-2')),
-    html.Br(),
-    html.Button(dcc.Link('Sentiment analysis from MongoDB', href='/page-3')),
-    html.Br(),
-    html.Button(dcc.Link('Run Volatility Script', href='/page-4')),
-    html.Br(),
-    html.Button(dcc.Link('Predict next stock market prices', href='/page-5')),
-    html.Br(),
-], style={'alignItems': 'center'})'''
 
 # Page 1 : Affiche les prix historiques à partir de PostgreSQL
 layout_1 = html.Div([
@@ -126,7 +110,7 @@ layout_1 = html.Div([
 
     html.H1('Historical prices from PostGres DB', style={'textAlign': 'center'}),
 
-    html.P("Select currency to plot: "),
+    html.H5("Select currency to plot: "),
     html.Div(dcc.Dropdown(id='page-1-dropdown',
                           options=dropdown1_options,
                           value=None
@@ -171,63 +155,14 @@ def load_default_csv_file(n_clicks):
     dropdown1_options = new_list
     return dropdown1_options
 
-'''layout_1 = html.Div([
-    navbar,
-
-    html.H1('Historical prices from PostGres DB', style={'textAlign': 'center', 'color': 'mediumturquoise'}),
-
-    html.P("Select currency to plot: "),
-    html.Div(dcc.Dropdown(id='page-1-dropdown',
-                          options=dropdown1_options,
-                          value=None
-                          )),
-    html.Div(dcc.Graph(id='page-1-graph')),
-
-    html.Br(),
-    html.Button('Load default example historical csv file', id="load_template", n_clicks=0),
-    html.P(id='placeholder'),
-
-    html.Br(),
-    html.Button(dcc.Link('Go back to home page', href='/'))
-], style={'background': 'beige'})
-
-
-# Callback pour mettre à jour le graphique en fonction de la sélection de la devise
-@app.callback(Output(component_id='page-1-graph', component_property='figure'),
-              [Input(component_id='page-1-dropdown', component_property='value')])
-def update_graph_1(ticker):
-    if ticker is None:
-        return go.Figure()
-    df = Postgres().get_table_as_dataframe(ticker)
-    fig = px.line(df, x="timestamp", y="close")
-    return fig
-
-
-# Callback pour charger un fichier CSV par défaut
-@app.callback(
-    Output("page-1-dropdown", "options"),
-    Input('load_template', 'n_clicks'),
-)
-def load_default_csv_file(n_clicks):
-    print("nombre de clicks", n_clicks)
-    global dropdown1_options
-    if n_clicks == 0 or len(dropdown1_options) != 0:
-        return dropdown1_options
-    postgres_client = Postgres()
-    postgres_client.initialize_with_historical_json(CHEMIN_JSON_LOCAL, reset=True)
-    tickers = postgres_client.get_all_table_names()
-    postgres_client.close()
-    new_list = [{"label": ticker[0], "value": ticker[0]} for ticker in tickers]
-    dropdown1_options = new_list
-    return dropdown1_options'''
 
 # Page 2 : Calcule la meilleure devise à trader à partir de la moyenne mobile
 layout_2 = html.Div([
     navbar,
 
     html.H1('Find best currency to trade from moving average',
-            style={'textAlign': 'center', 'color': 'mediumturquoise'}),
-    html.Button('Compute', id='loading-input-1', n_clicks=0),
+            style={'textAlign': 'center'}),
+    dbc.Button('Compute', id='loading-input-1', n_clicks=0),
     dcc.Loading(
         id="loading-1",
         type="default",
@@ -235,8 +170,8 @@ layout_2 = html.Div([
     ),
     html.Div(id='page2-output'),
     html.Br(),
-    html.Button(dcc.Link('Go back to home page', href='/'))
-], style={'background': 'beige'})
+    
+])
 
 
 # Callback pour effectuer le calcul lorsque le bouton "Compute" est cliqué
@@ -284,22 +219,20 @@ def filter_btc_data_by_x_range(no_failure: bool = True) -> go.Figure:
 layout_3 = html.Div([
     navbar,
 
-    html.H1('Sentiment analysis from MongoDB', style={'textAlign': 'center', 'color': 'mediumturquoise'}),
+    html.H1('Sentiment analysis from MongoDB', style={'textAlign': 'center'}),
     html.Div(dcc.Graph(id='page-3-graph1', figure=get_wiki_plot())),
     html.Br(),
     html.Div(dcc.Graph(id='page-3-graph2', figure=filter_btc_data_by_x_range())),
     html.Br(),
-    html.Button(dcc.Link('Go back to home page', href='/'))
-], style={'background': 'beige'})
+    ])
 
 # Page 4 : Affichage du dataframe 'VOLATILITE'
 layout_4 = html.Div([
     navbar,
 
     html.H1('Update and show volatility table',
-            style={'textAlign': 'center', 'color': 'mediumturquoise'}),
-    html.Button(dcc.Link('Go back to home page', href='/')),
-    html.Button('Compute', id='loading-input-4', n_clicks=0),
+            style={'textAlign': 'center'}),
+    dbc.Button('Compute', id='loading-input-4', n_clicks=0),
     dcc.Loading(
         id="loading-1",
         type="default",
@@ -307,44 +240,174 @@ layout_4 = html.Div([
     ),
     html.Div(id='page4-output'),
     html.Br(),
-    html.Button(dcc.Link('Go back to home page', href='/'))
-], style={'background': 'beige'})
+    ])
 
 # Page 5 : Prédictions
 layout_5 = html.Div([
     navbar,
     
     html.H1('Predict next stock market prices',
-            style={'textAlign': 'center', 'color': 'mediumturquoise'}),
-    html.H4('It will download the 59 last close market price spaced by 8 hours and '
+            style={'textAlign': 'center'}),
+    html.H5('It will download the 59 last close market price for ETHBTC spaced by 8 hours and '
             'run a model prediction for future values'),
 
     # Ajout d'un élément pour l'option de test (True ou False)
-    dcc.Checklist(
+    dbc.Switch(
         id='testing-option',
-        options=[
-            {'label': 'Testing', 'value': 'True'},
-        ],
-        value=['True'],  # Par défaut
-    ),
+        value=True,
+        label= 'Testing',
+        className='mt-4'),
 
-    # Ajout d'un élément pour ajuster le nombre de prédictions souhaitées
+    html.Div([
     dcc.Input(
         id='prediction-count',
         type='number',
         value=5,  # Par défaut, 5 prédictions
+        style={'margin-right': '10px'}  # Ajoutez une marge à droite pour espacer les éléments
     ),
-
-    # Bouton pour exécuter les prédictions
-    html.Button('Compute Predictions', id='compute-predictions', n_clicks=0),
+    dbc.Button('Compute Predictions', id='compute-predictions', n_clicks=0),
+], style={'display': 'flex', 'align-items': 'center'}),
 
     html.Div(dcc.Graph(id='page-5-graph1', figure=go.Figure())),
     html.Br(),
-    html.Button(dcc.Link('Go back to home page', href='/'))
-], style={'background': 'beige'})
+    ])
+
+# Page 6
+layout_6 = html.Div([
+    navbar,
+    html.H1('Machine Learning', style={'textAlign': 'center'}),
+    html.H5("Select currency to use for training: "),
+    html.Div(dcc.Dropdown(id='page-6-dropdown',
+                          options=dropdown1_options,
+                          value=None
+                          )),
+    dbc.Switch(id='save-model', value=False, label='Save model', className='mt-4'),
+    html.H5("Number of Epochs: "),
+    dbc.Input(id='num-epochs-input', type='number', value=10, style={"width": "15%", 'margin-bottom':'10px'}),
+    dbc.Button("Run Script", id="run-script-button", n_clicks=0),
+    html.Div(dcc.Graph(id='page-6-graph1', figure=go.Figure())),
+    html.Br(),
+])
+
+
+#définition de la fonction permettant d'entrainer le modèle et d'afficher le graphique:
+def train_and_generate_graph(selected_ticker, save_model,num_epochs):
+    
+    df = postgres.get_table_as_dataframe(selected_ticker)
+
+    df.sort_values(by=df.columns[0], ascending=True, inplace=True)
+
+    # Sélectionnez uniquement les colonnes 'close' et 'volume'
+    df = df[['close', 'volume']]
+
+    SAVE_MODEL = save_model == True
+
+    scaler = MinMaxScaler()
+    close_price = df.close.values.reshape(-1, 1)
+    scaled_close = scaler.fit_transform(close_price)
+    scaler_volume = MinMaxScaler()
+    scaled_volume = scaler_volume.fit_transform(df.volume.values.reshape(-1, 1))
+
+    if SAVE_MODEL:
+        joblib.dump(scaler, 'scaler_close_price.save')
+        joblib.dump(scaler_volume, 'scaler_volume.save')
+
+    sequence_len = 60
+
+    scaled_data = np.concatenate((scaled_close, scaled_volume), axis=1)
+
+    def split_into_sequences(data, seq_len):
+        n_seq = len(data) - seq_len + 1
+        return np.array([data[i:(i+seq_len)] for i in range(n_seq)])
+
+    def get_train_test_sets(data, seq_len, train_frac):
+        sequences = split_into_sequences(data, seq_len)
+        n_train = int(sequences.shape[0] * train_frac)
+        x_train = sequences[:n_train, :-1, :]
+        y_train = sequences[:n_train, -1, :]
+        x_test = sequences[n_train:, :-1, :]
+        y_test = sequences[n_train:, -1, :]
+        return x_train, y_train, x_test, y_test
+
+    # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33, shuffle=False)
+    x_train, y_train, x_test, y_test = get_train_test_sets(scaled_data, sequence_len, train_frac=0.9)
+
+    batch_size = 64
+    model = TimeSerieBaseLineModel(
+        seq_len=sequence_len,
+        input_shape=x_train.shape[-1],
+        output_shape=y_train.shape[-1],
+        dropout=0.05
+    )
+    model.currency = selected_ticker
+
+    model.compile(
+        loss='mean_squared_error',
+        optimizer='adam',
+    )
+
+    model.build((None, sequence_len, x_train.shape[-1]))
+    
+    model.fit(
+        x_train,
+        y_train,
+        epochs= num_epochs,
+        batch_size=batch_size,
+        shuffle=False,
+        validation_data=(x_test, y_test)
+    )
+
+    if SAVE_MODEL:
+        model.save("keras_next")
+    
+    y_pred = model.predict(x_test)
+    y_pred_train = model.predict(x_train)
+
+    y_train = np.expand_dims(y_train[:, 0], axis=-1)
+    y_test = np.expand_dims(y_test[:, 0], axis=-1)
+    y_pred = np.expand_dims(y_pred[:, 0], axis=-1)
+    y_pred_train = np.expand_dims(y_pred_train[:, 0], axis=-1)
+
+    y_test_orig = scaler.inverse_transform(y_test)
+    y_pred_orig = scaler.inverse_transform(y_pred)
+    y_pred_train_orig = scaler.inverse_transform(y_pred_train)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=np.arange(0, len(y_train)), y=scaler.inverse_transform(y_train), mode='lines', name='Historical Price', line=dict(color='brown')))
+    fig.add_trace(go.Scatter(x=np.arange(len(y_train), len(y_train) + len(y_test_orig)), y=y_test_orig, mode='lines', name='Actual Price', line=dict(color='orange')))
+    fig.add_trace(go.Scatter(x=np.arange(len(y_train), len(y_train) + len(y_pred_orig)), y=y_pred_orig, mode='lines', name='Predicted Price', line=dict(color='green')))
+    fig.add_trace(go.Scatter(x=np.arange(0, len(y_train)), y=y_pred_train_orig, mode='lines', name='Predicted Price train', line=dict(color='blue')))
+
+    fig.update_layout(
+        title=f'{selected_ticker} 8hours Prices',
+        xaxis_title='8hours space',
+        yaxis_title='Price ($)',
+        legend=dict(x=0, y=1)
+    )
+
+    return fig
+
+# Callback pour l'entraînement du modèle en fonction de la devise sélectionnée
+@app.callback(
+    Output('page-6-graph1', 'figure'),
+    Input('run-script-button', 'n_clicks'),
+    State('page-6-dropdown', 'value'),
+    State('save-model', 'on'),
+    State('num-epochs-input', 'value')
+)
+def update_graph(n_clicks, selected_ticker, save_model, num_epochs):
+    if n_clicks > 0:
+        # Appelez votre fonction train_and_generate_graph avec num_epochs
+        fig = train_and_generate_graph(selected_ticker, save_model, num_epochs)
+        return fig
+    else:
+        return go.Figure()
+
+
 
 
 # Mise à jour de l'index en fonction de l'URL
+
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
@@ -368,6 +431,8 @@ def display_page(pathname):
         return layout_4
     elif pathname == '/page-5':
         return layout_5
+    elif pathname == '/page-6':
+        return layout_6
     return html.Div(
         [
             html.H1("404: Not found", className="text-danger"),
@@ -376,23 +441,6 @@ def display_page(pathname):
         ],
         className="p-3 bg-light rounded-3",
     )
-
-
-
-    '''return html.Div([
-            html.H1('OPA dashboard', style={'color': 'aquamarine', 'textAlign': 'center'}),
-            html.Div(f'Number of Tables in the Database: {table_count}', style={'textAlign': 'bottom'}),
-            html.Button(dcc.Link('Historical prices from PostGres DB', href='/page-1')),
-            html.Br(),
-            html.Button(dcc.Link('Find best currency to trade from moving average', href='/page-2')),
-            html.Br(),
-            html.Button(dcc.Link('Sentiment analysis from MongoDB', href='/page-3')),
-            html.Br(),
-            html.Button(dcc.Link('Run Volatility Script', href='/page-4')),
-            html.Br(),
-            html.Button(dcc.Link('Predict next stock market prices', href='/page-5')),
-            html.Br(),
-        ], style={'alignItems': 'center'})'''
 
 
 # Callback pour effectuer l'update lorsque le bouton "Compute Predictions" est cliqué
@@ -410,7 +458,7 @@ def update_prediction_stock_market_price_figure(n_clicks: int, testing_option: l
     :return: (go.Figure)
     """
     # On récupère les options sélectionnées pour le test (True ou False)
-    testing = 'True' in testing_option
+    testing = testing_option == True
 
     # On récupère le nombre de prédictions souhaitées
     NUMBER_OF_PREDICTIONS = prediction_count

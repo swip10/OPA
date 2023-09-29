@@ -12,5 +12,5 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: /home/loic/Documents/Dev/OPA/docker/mongodb/db # Sets PV's host path
+    path: /run/desktop/mnt/host/c/Users/Ben/Documents/GitHub/OPA/docker/mongodb/db 
     type: Directory

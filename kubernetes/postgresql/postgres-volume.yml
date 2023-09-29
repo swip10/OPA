@@ -12,5 +12,5 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/home/loic/Documents/Dev/OPA/docker/postgresql/postgres-db"
+    path: /run/desktop/mnt/host/c/Users/Ben/Documents/GitHub/OPA/docker/postgresql/postgres-db
     type: DirectoryOrCreate

@@ -7,6 +7,6 @@ metadata:
   labels:
     app: postgres
 data:
-  POSTGRES_DB: postgres
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: OPA_data_hist
+  POSTGRES_USER: postgres2
+  POSTGRES_PASSWORD: ProjetOPA2023$
