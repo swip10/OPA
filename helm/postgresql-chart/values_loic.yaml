@@ -1,0 +1,8 @@
+
+configMap:
+  postgres_db: postgres
+  postgres_user: postgres
+  postgres_password: postgres
+
+volume:
+  path: "/home/loic/Documents/Dev/OPA/docker/postgresql/postgres-db"

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: StatefulSet # Create a deployment
+metadata:
+  name: mongodb # Set the name of the deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:5.0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.targetPort }}
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongodbdata
+      volumes:
+        - name: mongodbdata
+          persistentVolumeClaim:
+            claimName: mongodb-volume-claim
