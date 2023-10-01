@@ -14,10 +14,10 @@ spec:
     spec:
       containers:
         - name: mongodb
-          image: mongo:5.0
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: "IfNotPresent"
           ports:
-            - containerPort: {{ .Values.service.targetPort }}
+            - containerPort: {{ .Values.service.port }}
           volumeMounts:
             - mountPath: /data/db
               name: mongodbdata
