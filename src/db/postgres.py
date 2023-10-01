@@ -3,7 +3,19 @@ import pandas as pd
 from typing import List
 from config import config
 from src.db.sql import SQL
+from datetime import datetime
+import os
 
+def read_stream_start_date():
+    """Lire la date de démarrage du streaming à partir du fichier."""
+    if not os.path.exists('start_streaming.txt'):
+        return None
+    
+    with open('start_streaming.txt', 'r') as f:
+        lines = f.readlines()
+        if len(lines) >= 3:
+            return lines[2].strip()
+    return None
 
 class Postgres(SQL):
 
@@ -35,6 +47,23 @@ class Postgres(SQL):
         except psycopg2.errors.UndefinedTable:
             return pd.DataFrame()  # Retourne un dataframe vide
         except Exception as e:
+            return pd.DataFrame()  # Retourne un dataframe vide
+        
+    def get_table_as_dataframe_stream(self, ticker: str) -> pd.DataFrame:
+        try:
+            stream_start_date = read_stream_start_date()
+            if stream_start_date:
+                self.cursor.execute(f"SELECT * FROM {ticker} WHERE data_origin =true AND timestamp > %s", (stream_start_date,))
+            else:
+                self.cursor.execute(f"SELECT * FROM {ticker} WHERE data_origin =true")
+
+            table_data = self.cursor.fetchall()
+            table_columns = [desc[0] for desc in self.cursor.description]
+            return pd.DataFrame(table_data, columns=table_columns)
+        except psycopg2.errors.UndefinedTable:
+            return pd.DataFrame()  # Retourne un dataframe vide
+        except Exception as e:
+            print(f"Error: {e}")
             return pd.DataFrame()  # Retourne un dataframe vide
         
     def create_volatility_table(self):

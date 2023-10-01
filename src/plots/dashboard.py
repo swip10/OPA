@@ -23,11 +23,13 @@ import plotly.express as px
 from tqdm import tqdm
 from src.volatility_script import run_volatility_script
 from src.plots.wiki import get_wiki_plot_axis
+from src.postgreSQL_stream_script import launch_stream
 import time
+import atexit
 # Votre code commence ici
 
 
-app = dash.Dash(external_stylesheets=[dbc.themes.CERULEAN], suppress_callback_exceptions=True)
+app = dash.Dash(external_stylesheets=[dbc.themes.LUX], suppress_callback_exceptions=True)
 
 # Organisation de la sidebar de la page d'accueil
 SIDEBAR_STYLE = {
@@ -56,6 +58,7 @@ navbar = dbc.NavbarSimple(
         dbc.NavItem(dbc.NavLink("Crypto Volatility", href="/page-4", className="text-center")),
         dbc.NavItem(dbc.NavLink("Stock market prediction", href="/page-5", className="text-center")),
         dbc.NavItem(dbc.NavLink("Machine Learning", href="/page-6", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Streaming", href="/page-7", className="text-center")),
         dbc.Form(
             dbc.Input(type="search", placeholder="Search"),
             className="d-flex ms-auto",
@@ -72,6 +75,13 @@ navbar = dbc.NavbarSimple(
 
 # Initialisation de la connexion à PostgreSQL
 postgres = Postgres()
+
+# Initialisation du fichier pour le streaming
+try:
+    with open('start_streaming.txt', 'w') as f:
+        f.write("stop\ncurrency\ntimestamp")
+except Exception as e:
+    print(f"Erreur lors de la création du fichier: {e}")
 
 # Obtention de la liste des noms de table
 tickers = postgres.get_all_table_names()
@@ -98,6 +108,7 @@ index_page = html.Div(
         dbc.Button("Sentiment analysis from MongoDB", href="/page-3", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Run Volatility Script", href="/page-4", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Predict next stock market prices", href="/page-5", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
+        dbc.Button("Streaming", href="/page-7", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
     ],
     style=SIDEBAR_STYLE,
 )
@@ -404,6 +415,69 @@ def update_graph(n_clicks, selected_ticker, save_model, num_epochs):
         return go.Figure()
 
 
+layout_7 = html.Div([
+    navbar,
+    
+    html.H1('Streaming Page', style={'textAlign': 'center', 'color': 'mediumturquoise'}),
+    
+    dcc.Graph(id='live-update-graph'),  # Graphique pour afficher les données
+    html.P("Select currency to plot: "),
+    html.Div(dcc.Dropdown(id='page-1-dropdown',
+                          options=dropdown1_options,
+                          value=None
+                          )),
+    dcc.Interval(
+        id='interval-component',
+        interval=1*1000,  # en millisecondes, donc 1*1000 = 1 seconde
+        n_intervals=0
+    ),
+    
+    html.Button(dcc.Link('Go back to home page', href='/'))
+], style={'background': 'beige'})
+
+@app.callback(
+    Output('live-update-graph', 'figure'),
+    [Input('interval-component', 'n_intervals'),
+     Input('page-1-dropdown', 'value')]
+)
+def update_graph_live(n, selected_currency):
+    # Si aucune monnaie n'est sélectionnée, vous pouvez soit ne rien afficher, soit afficher une monnaie par défaut
+    if not selected_currency:
+        try:
+            with open('start_streaming.txt', 'w') as f:
+                f.write("stop\ncurrency\ntimestamp")
+        except Exception as e:
+            print(f"Erreur lors de la modification du fichier: {e}")
+        print('Rien')
+        return dash.no_update
+    
+    # Si une nouvelle monnaie est sélectionnée
+    if selected_currency:
+    # Si un streamer existe déjà, arrêtez-le et remplacez par le prochain
+        print('lancement stream')
+        if should_write_to_file('start', selected_currency):
+            try:
+                with open('start_streaming.txt', 'w') as f:
+                    f.write(f'start\n{selected_currency}\ntimestamp')
+            except Exception as e:
+                print(f"Erreur lors de la modification du fichier: {e}")
+
+
+    # Utilisez la monnaie sélectionnée pour récupérer les données
+    try:
+        df = Postgres().get_table_as_dataframe_stream(selected_currency)
+        # Mise à jour du graphique avec les nouvelles données
+        fig = px.line(df, x='timestamp', y='close', title=f'Live streaming data for {selected_currency.upper()}')
+        return fig
+    except Exception as e:
+        # Gérer l'exception et peut-être retourner un message d'erreur ou un graphique vide
+        print(e)
+        return dash.no_update
+
+
+
+
+
 
 
 # Mise à jour de l'index en fonction de l'URL
@@ -411,6 +485,9 @@ def update_graph(n_clicks, selected_ticker, save_model, num_epochs):
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
+    # Si on navigue hors de la page de streaming
+    if pathname != '/page-7':
+        stop_streaming()
     # Si l'URL est la page d'accueil, affichez la sidebar
     if pathname == "/":
         return html.Div([
@@ -433,6 +510,8 @@ def display_page(pathname):
         return layout_5
     elif pathname == '/page-6':
         return layout_6
+    elif pathname == '/page-7':
+        return layout_7
     return html.Div(
         [
             html.H1("404: Not found", className="text-danger"),
@@ -586,6 +665,30 @@ def get_table_count() -> int:
     return len(table_names)
 
 table_count= get_table_count()
+
+def should_write_to_file(command, currency):
+    try:
+        with open('start_streaming.txt', 'r') as f:
+            lines = f.readlines()
+        
+        # Si le fichier contient au moins 2 lignes et qu'elles correspondent à ce qui est attendu
+        if len(lines) >= 2 and lines[0].strip() == command and lines[1].strip() == currency:
+            return False
+        return True
+    except Exception as e:
+        print(f"Erreur lors de la lecture du fichier: {e}")
+        return True  # Si nous rencontrons une erreur, nous considérons que nous devons écrire dans le fichier
+
+def stop_streaming():
+    """Arrêtez le streaming en mettant à jour le fichier."""
+    try:
+        with open('start_streaming.txt', 'w') as f:
+            f.write("stop\ncurrency\ntimestamp")
+    except Exception as e:
+        print(f"Erreur lors de la modification du fichier: {e}")
+
+# Ajoutez ceci pour vous assurer que stop_streaming est appelé à la sortie.
+atexit.register(stop_streaming)
 
 if __name__ == '__main__':
     app.run_server(debug=True, host="0.0.0.0")

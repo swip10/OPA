@@ -86,7 +86,7 @@ class SQL(DBClient):
     def execute_pandas_query(self, query: str) -> pd.DataFrame:
         return pd.read_sql_query(query, self.connection)
 
-    def callback_stream_msg(self, msg: dict) -> None:
+    def callback_stream_msg(self, msg: dict, ticker) -> None:
         kline = msg["k"]
         data = dict()
         data["timestamp"] = convert_ms_to_timestamp(kline["t"])
@@ -103,7 +103,7 @@ class SQL(DBClient):
         # Création de la colonne data_origin à True car nous sommes dans la partie stream
         data["data_origin"] = True
         print(data)
-        self.add_line_to_database(data, self.tickers_dict[kline["s"]], close_db=False)
+        self.add_line_to_database(data, ticker, close_db=False)
         self.connection.commit()
 
     def close(self) -> None:

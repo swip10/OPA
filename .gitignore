@@ -3,6 +3,7 @@ config/*.ini
 config/*.env
 data/ticker_data_hist_new.json
 data/*
+start_streaming.txt
 
 # OPA mongodb
 docker/mongodb/db/*
