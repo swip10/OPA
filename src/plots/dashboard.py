@@ -51,16 +51,16 @@ CONTENT_STYLE = {
 # Barre de navigation avec brand à gauche et barre de recherche à droite
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Home", href="/", className="text-center")),
-        dbc.NavItem(dbc.NavLink("Historical prices", href="/page-1", className="text-center")),
-        dbc.NavItem(dbc.NavLink("Best currency to trade", href="/page-2", className="text-center")),
-        dbc.NavItem(dbc.NavLink("Sentiment analysis", href="/page-3", className="text-center")),
-        dbc.NavItem(dbc.NavLink("Crypto Volatility", href="/page-4", className="text-center")),
-        dbc.NavItem(dbc.NavLink("Stock market prediction", href="/page-5", className="text-center")),
-        dbc.NavItem(dbc.NavLink("Machine Learning", href="/page-6", className="text-center")),
-        dbc.NavItem(dbc.NavLink("Streaming", href="/page-7", className="text-center")),
+        dbc.NavItem(dbc.NavLink("Home", href="/", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Historical prices", href="/page-1", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Best currency to trade", href="/page-2", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Sentiment analysis", href="/page-3", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Crypto Volatility", href="/page-4", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Stock market prediction", href="/page-5", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Machine Learning", href="/page-6", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Streaming", href="/page-7", className="nav-link")),
         dbc.Form(
-            dbc.Input(type="search", placeholder="Search"),
+            dbc.Input(type="search", placeholder="Search", className="form-control"),
             className="d-flex ms-auto",
         ),
         dbc.Button("Search", color="secondary", className="ms-2"),
@@ -70,6 +70,8 @@ navbar = dbc.NavbarSimple(
     color="primary",
     dark=True,
     brand_style={"margin-left": "5px"},
+    fluid=True
+    
 )
 
 
@@ -96,11 +98,9 @@ app.layout = html.Div([dcc.Location(id="url"),  content])
 # Organisation de la page d'accueil
 index_page = html.Div(
     [
-        html.H2("OPA dashboard", className="display-4",style={"width": "90%", "text-align": "center"}),
+        html.H2("OPA dashboard", className="display-4", style={"width": "90%", "text-align": "center", "font-size": "40px","font-weight": "bold"}),
         html.Hr(),
-        html.P(
-            "A simple App to help trading cryptocurrencies", className="lead"
-        ),
+        html.P("A simple App to help trading cryptocurrencies", className="lead",style={"width": "90%", "text-align": "center"}),
         html.Div(id='table-count', style={'textAlign': 'center', 'marginBottom': '20px'}),
         dbc.Button("Home", href="/", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Historical prices from PostGres DB", href="/page-1", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
@@ -108,9 +108,10 @@ index_page = html.Div(
         dbc.Button("Sentiment analysis from MongoDB", href="/page-3", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Run Volatility Script", href="/page-4", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Predict next stock market prices", href="/page-5", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
+        dbc.Button("Machine Learning", href="/page-6", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Streaming", href="/page-7", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
     ],
-    style=SIDEBAR_STYLE,
+    style=SIDEBAR_STYLE
 )
 
 
@@ -414,11 +415,12 @@ def update_graph(n_clicks, selected_ticker, save_model, num_epochs):
     else:
         return go.Figure()
 
+#page 7
 
 layout_7 = html.Div([
     navbar,
     
-    html.H1('Streaming Page', style={'textAlign': 'center', 'color': 'mediumturquoise'}),
+    html.H1('Streaming Page', style={'textAlign': 'center'}),
     
     dcc.Graph(id='live-update-graph'),  # Graphique pour afficher les données
     html.P("Select currency to plot: "),
@@ -430,10 +432,8 @@ layout_7 = html.Div([
         id='interval-component',
         interval=1*1000,  # en millisecondes, donc 1*1000 = 1 seconde
         n_intervals=0
-    ),
-    
-    html.Button(dcc.Link('Go back to home page', href='/'))
-], style={'background': 'beige'})
+    )
+])
 
 @app.callback(
     Output('live-update-graph', 'figure'),
