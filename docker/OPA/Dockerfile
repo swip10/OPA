@@ -16,3 +16,8 @@ ENV AM_I_IN_A_DOCKER_CONTAINER Yes
 COPY ./models /code/models
 COPY ./config /code/config
 COPY ./tests /code/tests
+
+# Définir le fuseau horaire
+ENV TZ=Europe/Paris
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
