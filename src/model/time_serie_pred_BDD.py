@@ -17,30 +17,16 @@ selected_ticker = 'ETHBTC'
 
 df= database.get_table_as_dataframe(selected_ticker)
 
-df.sort_values(by='timestamp', ascending=True, inplace=True)  #range les lignes par dates croissantes (pas forcément nécessaire car déjà fait dans la BDD normalement)
+df.sort_values(by='timestamp', ascending=True, inplace=True)  
 
 # Sélectionnez uniquement les colonnes 'close' et 'volume'
 df = df[['close', 'volume']]
 
 # good scenario 4 to test - pass currency type as input
 # https://stackoverflow.com/questions/65345953/adding-exogenous-variables-to-my-univariate-lstm-model
+
 SAVE_MODEL = False
 
-'''with open(config.CHEMIN_JSON_LOCAL, "r") as json_file: 
-    hist_data = json.load(json_file)
-
-list_df = []
-for key in hist_data:
-    sub_df = pd.DataFrame(hist_data[key])
-    sub_df["symbol"] = key
-    list_df.append(sub_df)
-df = pd.concat(list_df, ignore_index=True)
-
-df = df[["close", "symbol", "volume"]]
-df = df.astype({'close': 'float', 'volume': 'float'})
-
-# filter on only one currency during dev
-df = df.query("symbol == 'ETHBTC'")'''
 
 # scaler should be only train on test set
 scaler = MinMaxScaler()
@@ -101,7 +87,7 @@ model.summary()
 history = model.fit(
     x_train,
     y_train,
-    epochs=10,
+    epochs=1,
     batch_size=batch_size,
     shuffle=False,
     validation_data=(x_test, y_test)
@@ -141,3 +127,5 @@ plt.xlabel('8hours space')
 plt.ylabel('Price ($)')
 plt.legend()
 plt.show()
+print("avant inverse scale",y_pred)
+print("après inverse scale",y_pred_orig)

@@ -4,6 +4,7 @@ import json
 import joblib
 import numpy as np
 import pandas as pd
+import dash_canvas as dc
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from src.model.time_serie_base_line_model import TimeSerieBaseLineModel
@@ -51,17 +52,17 @@ CONTENT_STYLE = {
 # Barre de navigation avec brand à gauche et barre de recherche à droite
 navbar = dbc.NavbarSimple(
     children=[
-        dbc.NavItem(dbc.NavLink("Home", href="/", className="nav-link")),
-        dbc.NavItem(dbc.NavLink("Historical prices", href="/page-1", className="nav-link")),
-        dbc.NavItem(dbc.NavLink("Best currency to trade", href="/page-2", className="nav-link")),
-        dbc.NavItem(dbc.NavLink("Sentiment analysis", href="/page-3", className="nav-link")),
-        dbc.NavItem(dbc.NavLink("Crypto Volatility", href="/page-4", className="nav-link")),
-        dbc.NavItem(dbc.NavLink("Stock market prediction", href="/page-5", className="nav-link")),
-        dbc.NavItem(dbc.NavLink("Machine Learning", href="/page-6", className="nav-link")),
-        dbc.NavItem(dbc.NavLink("Streaming", href="/page-7", className="nav-link")),
+        dbc.NavItem(dbc.NavLink("Home", href="/", className="nav-link align-items-center text-center")),
+        dbc.NavItem(dbc.NavLink("Historical prices", href="/page-1", className="nav-link align-items-center text-center")),
+        dbc.NavItem(dbc.NavLink("Best currency to trade", href="/page-2", className="nav-link align-items-center text-center")),
+        dbc.NavItem(dbc.NavLink("Sentiment analysis", href="/page-3", className="nav-link align-items-center text-center")),
+        dbc.NavItem(dbc.NavLink("Crypto Volatility", href="/page-4", className="nav-link align-items-center text-center")),
+        dbc.NavItem(dbc.NavLink("Stock market prediction", href="/page-5", className="nav-link align-items-center text-center")),
+        dbc.NavItem(dbc.NavLink("Machine Learning", href="/page-6", className="nav-link align-items-center text-center")),
+        dbc.NavItem(dbc.NavLink("Streaming", href="/page-7", className="nav-link align-items-center text-center")),
         dbc.Form(
             dbc.Input(type="search", placeholder="Search", className="form-control"),
-            className="d-flex ms-auto",
+            className="d-flex",  
         ),
         dbc.Button("Search", color="secondary", className="ms-2"),
     ],
@@ -70,9 +71,10 @@ navbar = dbc.NavbarSimple(
     color="primary",
     dark=True,
     brand_style={"margin-left": "5px"},
-    fluid=True
-    
+    fluid=True,
+    style={"display": "flex", "justify-content": 'space-between', "align-items": "center"}  
 )
+
 
 
 # Initialisation de la connexion à PostgreSQL
@@ -102,7 +104,6 @@ index_page = html.Div(
         html.Hr(),
         html.P("A simple App to help trading cryptocurrencies", className="lead",style={"width": "90%", "text-align": "center"}),
         html.Div(id='table-count', style={'textAlign': 'center', 'marginBottom': '20px'}),
-        dbc.Button("Home", href="/", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Historical prices from PostGres DB", href="/page-1", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Find best currency to trade from moving average", href="/page-2", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
         dbc.Button("Sentiment analysis from MongoDB", href="/page-3", color="primary", className="mb-2", style={"width": "90%", "text-align": "center"}),
@@ -278,7 +279,7 @@ layout_5 = html.Div([
         style={'margin-right': '10px'}  # Ajoutez une marge à droite pour espacer les éléments
     ),
     dbc.Button('Compute Predictions', id='compute-predictions', n_clicks=0),
-], style={'display': 'flex', 'align-items': 'center'}),
+    ], style={'display': 'flex', 'align-items': 'center'}),
 
     html.Div(dcc.Graph(id='page-5-graph1', figure=go.Figure())),
     html.Br(),
@@ -295,20 +296,20 @@ layout_6 = html.Div([
                           )),
     dbc.Switch(id='save-model', value=False, label='Save model', className='mt-4'),
     html.H5("Number of Epochs: "),
-    dbc.Input(id='num-epochs-input', type='number', value=10, style={"width": "15%", 'margin-bottom':'10px'}),
+    dbc.Input(id='num-epochs-input', type='number', value=1, style={"width": "15%", 'margin-bottom':'10px'}),
     dbc.Button("Run Script", id="run-script-button", n_clicks=0),
     html.Div(dcc.Graph(id='page-6-graph1', figure=go.Figure())),
-    html.Br(),
+    html.Br()
 ])
 
 
 #définition de la fonction permettant d'entrainer le modèle et d'afficher le graphique:
+
 def train_and_generate_graph(selected_ticker, save_model,num_epochs):
     
-    df = postgres.get_table_as_dataframe(selected_ticker)
+    df = Postgres().get_table_as_dataframe(selected_ticker)
 
-    df.sort_values(by=df.columns[0], ascending=True, inplace=True)
-
+    df.sort_values(by='timestamp', ascending=True, inplace=True)
     # Sélectionnez uniquement les colonnes 'close' et 'volume'
     df = df[['close', 'volume']]
 
@@ -384,18 +385,22 @@ def train_and_generate_graph(selected_ticker, save_model,num_epochs):
     y_pred_orig = scaler.inverse_transform(y_pred)
     y_pred_train_orig = scaler.inverse_transform(y_pred_train)
 
+    y_train2= np.squeeze(y_train)
+    y_test2= np.squeeze(y_test)
+    y_pred2=np.squeeze(y_pred)
+    y_pred_train2=np.squeeze(y_pred_train)
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=np.arange(0, len(y_train)), y=scaler.inverse_transform(y_train), mode='lines', name='Historical Price', line=dict(color='brown')))
-    fig.add_trace(go.Scatter(x=np.arange(len(y_train), len(y_train) + len(y_test_orig)), y=y_test_orig, mode='lines', name='Actual Price', line=dict(color='orange')))
-    fig.add_trace(go.Scatter(x=np.arange(len(y_train), len(y_train) + len(y_pred_orig)), y=y_pred_orig, mode='lines', name='Predicted Price', line=dict(color='green')))
-    fig.add_trace(go.Scatter(x=np.arange(0, len(y_train)), y=y_pred_train_orig, mode='lines', name='Predicted Price train', line=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=np.arange(0, len(y_train)), y=y_train2, mode='lines', name='Historical Price', line=dict(color='brown')))
+    fig.add_trace(go.Scatter(x=np.arange(len(y_train), len(y_train) + len(y_test_orig)), y=y_test2, mode='lines', name='Actual Price', line=dict(color='orange')))
+    fig.add_trace(go.Scatter(x=np.arange(len(y_train), len(y_train) + len(y_pred_orig)), y=y_pred2, mode='lines', name='Predicted Price', line=dict(color='green')))
+    fig.add_trace(go.Scatter(x=np.arange(0, len(y_train)), y=y_pred_train2, mode='lines', name='Predicted Price train', line=dict(color='blue')))
 
     fig.update_layout(
         title=f'{selected_ticker} 8hours Prices',
         xaxis_title='8hours space',
         yaxis_title='Price ($)',
-        legend=dict(x=0, y=1)
-    )
+            )
 
     return fig
 
@@ -473,11 +478,6 @@ def update_graph_live(n, selected_currency):
         # Gérer l'exception et peut-être retourner un message d'erreur ou un graphique vide
         print(e)
         return dash.no_update
-
-
-
-
-
 
 
 # Mise à jour de l'index en fonction de l'URL

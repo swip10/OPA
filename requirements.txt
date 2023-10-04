@@ -27,3 +27,4 @@ uvicorn
 sphinx
 sphinx-rtd-theme
 dash-bootstrap-components
+dash_canvas
