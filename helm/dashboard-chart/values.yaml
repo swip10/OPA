@@ -10,8 +10,7 @@ image:
   tag: "latest"
 
 service:
-  # type:  LoadBalancer ClusterIP
-  type: ClusterIP
+  type:  LoadBalancer
   port: 8050
   # targetPort: 8050
 

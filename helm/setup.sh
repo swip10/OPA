@@ -27,8 +27,7 @@ Run()
     sleep 60
     helm install dashboard dashboard-chart/ -f dashboard-chart/values.yaml
     helm install fastapi fastapi-chart/ -f fastapi-chart/values.yaml
-    sleep 30
-    kubectl port-forward svc/dashboard-service 8050:8050
+    sleep 10
 }
 
 
