@@ -22,24 +22,29 @@ Help()
 ################################################################################
 Run()
 {
-    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-
-    helm install postgres postgresql-chart/ -f postgresql-chart/values.yaml -f postgresql-chart/values_loic.yaml
-    helm install mongodb mongodb-chart/ -f mongodb-chart/values.yaml -f mongodb-chart/values_loic.yaml
+    helm install postgres postgresql-chart/ -f postgresql-chart/values.yaml -f postgresql-chart/values_ber.yaml
+    helm install mongodb mongodb-chart/ -f mongodb-chart/values.yaml -f postgresql-chart/values_ber.yaml
+    sleep 60
     helm install dashboard dashboard-chart/ -f dashboard-chart/values.yaml
     helm install fastapi fastapi-chart/ -f fastapi-chart/values.yaml
+    sleep 30
+    kubectl port-forward svc/dashboard-service 8050:8050
 }
+
 
 
 ################################################################################
 # Stop                                                                         #
 ################################################################################
 Stop()
-{
-    helm uninstall postgres
-    helm uninstall mongodb
+{ 
     helm uninstall dashboard
+    sleep 30
     helm uninstall fastapi
+    sleep 30
+    helm uninstall mongodb
+    sleep 30
+    helm uninstall postgres
 }
 
 ################################################################################

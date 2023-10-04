@@ -4,6 +4,7 @@ import pandas as pd
 from typing import List
 from src.db.clientdb import DBClient
 from src.utils.time import convert_ms_to_timestamp
+from typing import Union, List
 
 
 class SQL(DBClient):
@@ -34,7 +35,9 @@ class SQL(DBClient):
             f"data_origin BOOLEAN DEFAULT True)"
         )
 
-    def create_tables(self, tickers: List[str], reset: bool = False) -> None:
+    def create_tables(self, tickers: Union[str, List[str]], reset: bool = False) -> None:
+        if isinstance(tickers, str):
+            tickers = [tickers]
         for ticker in tickers:
             self.create_table(ticker, reset)
 

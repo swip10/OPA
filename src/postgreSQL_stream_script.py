@@ -12,7 +12,7 @@ def launch_stream(ticker):
     twm.start()
 
     postgres_client = Postgres()
-    postgres_client.create_tables(ticker, reset=True)
+    postgres_client.create_tables(ticker, reset=False)
 
     write_start_time_to_file()
     twm.start_kline_socket(callback=lambda msg: postgres_client.callback_stream_msg(msg, ticker), symbol=ticker, interval='1s')
