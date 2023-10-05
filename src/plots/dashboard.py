@@ -345,7 +345,7 @@ def train_and_generate_graph(selected_ticker, save_model,num_epochs):
     # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33, shuffle=False)
     x_train, y_train, x_test, y_test = get_train_test_sets(scaled_data, sequence_len, train_frac=0.9)
 
-    batch_size = 128
+    batch_size = 64
     model = TimeSerieBaseLineModel(
         seq_len=sequence_len,
         input_shape=x_train.shape[-1],
