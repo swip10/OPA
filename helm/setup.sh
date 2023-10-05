@@ -42,7 +42,7 @@ Run()
 {
     initialize
     helm install postgres postgresql-chart/ -f postgresql-chart/values.yaml -f postgresql-chart/values_`whoami`.yaml
-    helm install mongodb mongodb-chart/ -f mongodb-chart/values.yaml -f postgresql-chart/values_`whoami`.yaml
+    helm install mongodb mongodb-chart/ -f mongodb-chart/values.yaml -f mongodb-chart/values_`whoami`.yaml
     sleepy 60
     helm install dashboard dashboard-chart/ -f dashboard-chart/values.yaml
     helm install fastapi fastapi-chart/ -f fastapi-chart/values.yaml
@@ -58,11 +58,11 @@ Stop()
 {
     initialize
     helm uninstall dashboard
-    sleepy 30
+    sleepy 15
     helm uninstall fastapi
-    sleepy 30
+    sleepy 15
     helm uninstall mongodb
-    sleepy 30
+    sleepy 15
     helm uninstall postgres
 }
 
