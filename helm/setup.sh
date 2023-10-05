@@ -17,17 +17,36 @@ Help()
    echo
 }
 
+
+sleepy()
+{
+    if [ ! `whoami` = 'loic' ]
+    then
+      sleep $1
+    fi
+}
+
+
+initialize()
+{
+    if [ `whoami` = 'loic' ]
+    then
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    fi
+}
+
 ################################################################################
 # Run                                                                         #
 ################################################################################
 Run()
 {
-    helm install postgres postgresql-chart/ -f postgresql-chart/values.yaml -f postgresql-chart/values_ber.yaml
-    helm install mongodb mongodb-chart/ -f mongodb-chart/values.yaml -f postgresql-chart/values_ber.yaml
-    sleep 60
+    initialize
+    helm install postgres postgresql-chart/ -f postgresql-chart/values.yaml -f postgresql-chart/values_`whoami`.yaml
+    helm install mongodb mongodb-chart/ -f mongodb-chart/values.yaml -f postgresql-chart/values_`whoami`.yaml
+    sleepy 60
     helm install dashboard dashboard-chart/ -f dashboard-chart/values.yaml
     helm install fastapi fastapi-chart/ -f fastapi-chart/values.yaml
-    sleep 10
+    sleepy 10
 }
 
 
@@ -36,13 +55,14 @@ Run()
 # Stop                                                                         #
 ################################################################################
 Stop()
-{ 
+{
+    initialize
     helm uninstall dashboard
-    sleep 30
+    sleepy 30
     helm uninstall fastapi
-    sleep 30
+    sleepy 30
     helm uninstall mongodb
-    sleep 30
+    sleepy 30
     helm uninstall postgres
 }
 

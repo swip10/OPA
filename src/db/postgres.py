@@ -17,6 +17,7 @@ def read_stream_start_date():
             return lines[2].strip()
     return None
 
+
 class Postgres(SQL):
 
     def __init__(self):
@@ -36,18 +37,19 @@ class Postgres(SQL):
         table_names = self.cursor.fetchall()
         return table_names
     
-    #Fonction permettant de récupérer un df à partir d'une table d'un ticker spécifié:
-    
     def get_table_as_dataframe(self, ticker: str) -> pd.DataFrame:
+        """
+        Fonction permettant de récupérer un df à partir d'une table d'un ticker spécifié
+        :param ticker: (str) ticker name
+        :return: (DataFrame) pandas dataframe containing the data for the ticker
+        """
         try:
             self.cursor.execute(f"SELECT * FROM {ticker}")
             table_data = self.cursor.fetchall()
             table_columns = [desc[0] for desc in self.cursor.description]
             return pd.DataFrame(table_data, columns=table_columns)
         except psycopg2.errors.UndefinedTable:
-            return pd.DataFrame()  # Retourne un dataframe vide
-        except Exception as e:
-            return pd.DataFrame()  # Retourne un dataframe vide
+            return pd.DataFrame()
         
     def get_table_as_dataframe_stream(self, ticker: str) -> pd.DataFrame:
         try:
@@ -88,8 +90,6 @@ class Postgres(SQL):
         except (Exception, psycopg2.DatabaseError) as error:
             print("Error while creating PostgreSQL table", error)
 
-
-
     def insert_df_into_table(self, df: pd.DataFrame, table_name: str) -> None:
         # Get the column names from the SQL table
         self.cursor.execute(f"SELECT * FROM {table_name} LIMIT 0")
@@ -118,8 +118,6 @@ class Postgres(SQL):
             print("Error: %s" % error)
             self.connection.rollback()
 
-
-
     def drop_table(self, table_name: str) -> None:
         """Supprimer une table dans la base de données."""
         try:
@@ -129,4 +127,3 @@ class Postgres(SQL):
         except (Exception, psycopg2.DatabaseError) as error:
             print("Error: %s" % error)
             self.connection.rollback()
-
