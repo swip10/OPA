@@ -617,7 +617,7 @@ def sma() -> str:
     """
     postgres = Postgres()
     table_names = postgres.get_all_table_names()
-    table_names = ['btcusdt', 'subbtc', 'ltceur']  # Exemple de devises à analyser
+    table_names = [name[0] for name in table_names[0:10]]  # Exemple de devises à analyser
     ticker_impossible = []  # Liste pour les devises pour lesquelles la stratégie ne peut pas être appliquée
     wallets = {}  # Dictionnaire pour stocker les résultats
 
