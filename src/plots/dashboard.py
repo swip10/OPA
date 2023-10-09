@@ -27,6 +27,8 @@ from src.plots.wiki import get_wiki_plot_axis
 from src.postgreSQL_stream_script import launch_stream
 import time
 import atexit
+from typing import Dict, List, Union
+
 # Votre code commence ici
 
 
@@ -176,12 +178,15 @@ layout_2 = html.Div([
     html.H1('Find best currency to trade from moving average',
             style={'textAlign': 'center'}),
     dbc.Button('Compute', id='loading-input-1', n_clicks=0),
+    html.Br(),
+    dbc.Button('Compute SMA_all', id='compute-sma_all', n_clicks=0),
     dcc.Loading(
         id="loading-1",
         type="default",
         children=html.Div(id="loading-output-1")
     ),
     html.Div(id='page2-output'),
+    dash_table.DataTable(id='table-output', style_table={'overflowX': 'auto'}),
     html.Br(),
     
 ])
@@ -189,13 +194,34 @@ layout_2 = html.Div([
 
 # Callback pour effectuer le calcul lorsque le bouton "Compute" est cliqué
 @app.callback(
-    Output(component_id='page2-output', component_property='children'),
-    Input(component_id="loading-input-1", component_property="n_clicks"),
+    [Output(component_id='page2-output', component_property='children'),
+     Output('table-output', 'data'),
+     Output('table-output', 'columns')],
+    [Input(component_id="loading-input-1", component_property="n_clicks"),
+     Input('compute-sma_all', 'n_clicks')],
 )
-def input_triggers_spinner(n_clicks):
-    if n_clicks > 0:
-        message = sma()
-        return "", message
+def input_triggers_spinner(n_clicks, n_clicks_all):
+    ctx = dash.callback_context
+    result_df = pd.DataFrame()  # Initialiser avec une valeur par défaut
+    message = ""  # Initialiser avec une valeur par défaut
+
+    if not ctx.triggered_id:
+        button_id = 'loading-input-1'
+    else:
+        button_id = ctx.triggered_id.split('.')[0]
+
+    if button_id == 'loading-input-1' and n_clicks > 0:
+        message, result_df = sma2()
+    elif button_id == 'compute-sma_all' and n_clicks_all > 0:
+        message, result_df = sma()
+
+    if result_df.empty:
+        data, columns = [], []
+    else:
+        data = result_df.to_dict('records')
+        columns = [{'name': col, 'id': col} for col in result_df.columns]
+
+    return message, data, columns
 
 
 def get_btc_plot(no_failure: bool = True) -> go.Figure:
@@ -610,14 +636,16 @@ def input_triggers_spinner(n_clicks: int) -> dash_table.DataTable:
     else:
         return dash_table.DataTable()
 
-def sma() -> str:
+def sma2() -> str:
     """
     Fonction pour calculer la meilleure devise à trader
     :return: message: (str)
     """
     postgres = Postgres()
     table_names = postgres.get_all_table_names()
-    table_names = [name[0] for name in table_names[0:10]]  # Exemple de devises à analyser
+
+    table_names = [name[0] for name in table_names if name[0].lower().endswith(('usd', 'usdt'))]
+    table_names = table_names[0:10]
     ticker_impossible = []  # Liste pour les devises pour lesquelles la stratégie ne peut pas être appliquée
     wallets = {}  # Dictionnaire pour stocker les résultats
 
@@ -646,13 +674,103 @@ def sma() -> str:
                 profit = (sell_price - buy_price) * (wallets[table] / buy_price)
                 wallets[table] += profit
                 in_position = False
+    # Construire result_df comme un DataFrame
+    result_df = pd.DataFrame({
+        'Table': list(wallets.keys()),
+        'End Wallet': [round(wallet, 2) for wallet in wallets.values()]
+    })
 
     max_wallet = max(wallets, key=wallets.get)
     res = f"Le wallet avec le plus d'argent est {max_wallet} avec {round(wallets[max_wallet], 2)}$ à la fin. \n\n"
     res += f"Nombre de devise(s) pour lesquelles la stratégie n'a pas pu être appliquée : " \
            f"{len(ticker_impossible)}/ {len(table_names)} \n"
     res += f"Exemple de devise(s) pour lesquelles la stratégie n'a pas pu être appliquée: {ticker_impossible[:5]}"
-    return res
+    return res, result_df
+
+def sma() -> str:
+    postgres=Postgres()
+    # On récupère le nom des différentes tables de la base de donnée, ainsi que le df pour le ticker choisi (nom, ou position dans la liste obtenue)
+    # table_names=postgres.get_all_table_names()
+    # ici pour l'exemple on choisi que deux ticker ticker
+    table_names = postgres.get_all_table_names()
+    table_names = [name[0] for name in table_names if name[0].lower().endswith(('usd', 'usdt'))]
+    table_names = table_names[0:3]
+
+
+    ticker_impossible = []  # Liste pour les devises pour lesquelles la stratégie ne peut pas être appliquée
+    # Initialiser le dictionnaire de résultats
+    results = {}
+    for table in table_names:
+        results[table] = []
+
+    # Parcourir chaque table et tester chaque combinaison de SMA
+    for table in table_names:
+        df = postgres.get_table_as_dataframe(table)
+        if 'close' not in df.columns:
+            continue
+        if df.empty or len(df) < 300:
+            ticker_impossible.append(table)
+            wallets.pop(table, None)
+            continue
+
+        # Initialiser le dictionnaire des wallets pour chaque combinaison de SMA
+        wallets = {}
+        for i in range(20, 30, 2):
+            for j in range(50, 201, 10):
+                if i < j:
+                    wallets[(i, j)] = 1000
+
+        # Parcourir chaque combinaison de SMA et calculer les résultats
+        for i in range(20, 30, 4):
+            for j in range(50, 191, 20):
+                if i < j:
+                    df['sma'+str(i)] = df['close'].rolling(window=i).mean()
+                    df['sma'+str(j)] = df['close'].rolling(window=j).mean() 
+
+                    # Analyser les croisements des moyennes mobiles et acheter ou vendre
+                    in_position = False
+                    for k in range(len(df)):
+                        if df['sma'+str(i)][k] > df['sma'+str(j)][k] and not in_position:
+                            buy_price = df['close'][k]
+                            in_position = True
+                            wallet = wallets[(i, j)]
+                        elif df['sma'+str(i)][k] < df['sma'+str(j)][k] and in_position:
+                            sell_price = df['close'][k]
+                            profit = (sell_price - buy_price) * (wallet / buy_price)
+                            wallet += profit
+                            wallets[(i, j)] = wallet
+                            in_position = False
+
+                    # Ajouter les résultats pour cette combinaison de SMA
+                    results[table].append({
+                        'sma1': i,
+                        'sma2': j,
+                        'wallet': max(wallets.values())
+                    })
+
+    # Construire le DataFrame de résultats
+    result_df = build_results_dataframe(results)
+    # Afficher les résultats
+    # Trouver le meilleur résultat pour chaque table
+    for table in table_names:
+        best_result = max(results[table], key=lambda x: x['wallet'])
+        res=f"Table {table}: SMA1={best_result['sma1']}, SMA2={best_result['sma2']}, "
+        res +=f"Wallet={round(best_result['wallet'], 2)}"
+        return res, result_df
+
+def build_results_dataframe(results: Dict[str, List[Dict[str, Union[int, float]]]]) -> pd.DataFrame:
+    data = {'Table': [], 'Best_SMA1': [], 'Best_SMA2': [], 'Best_Wallet': []}
+    for table, result_list in results.items():
+        if not result_list:  # Vérification si la liste est vide
+            continue
+        best_result = max(result_list, key=lambda x: x['wallet'])
+        data['Table'].append(table)
+        data['Best_SMA1'].append(best_result['sma1'])
+        data['Best_SMA2'].append(best_result['sma2'])
+        data['Best_Wallet'].append(round(best_result['wallet'], 2))
+
+    result_df = pd.DataFrame(data)
+    return result_df
 
 
 def get_table_count() -> int:
